@@ -190,7 +190,7 @@ npm install
 Create `.env.local` in the project root:
 
 ```env
-MONGODB_URI=
+MONGODB_URI=mongodb://127.0.0.1:27017/ielts-examiner
 JWT_SECRET=change-this-to-a-long-random-secret
 APP_URL=http://localhost:3000
 NEXT_PUBLIC_APP_URL=http://localhost:3000
