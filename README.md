@@ -251,10 +251,34 @@ npm run lint
 Run ESLint.
 
 ```bash
+npm run typecheck
+```
+
+Run TypeScript checks.
+
+```bash
+npm run test:e2e
+```
+
+Run Playwright end-to-end tests.
+
+```bash
+npm run test:unit
+```
+
+Run unit/route-handler tests for core auth + protected API flows.
+
+```bash
+npm test
+```
+
+Run the full automated suite (unit + Playwright).
+
+```bash
 npm run test:auth
 ```
 
-Run the auth smoke test. Requires the app to be running.
+Run the auth smoke test against a running app instance.
 
 ## Environment Variables
 
