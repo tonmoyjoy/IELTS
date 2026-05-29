@@ -11,12 +11,13 @@ export default defineConfig({
     trace: "on-first-retry",
   },
   webServer: {
-    command: "npm run dev -- --hostname 127.0.0.1 --port 3100",
+    command: process.env.CI
+      ? "npm run start -- --hostname 127.0.0.1 --port 3100"
+      : "npm run dev -- --hostname 127.0.0.1 --port 3100",
     url: "http://127.0.0.1:3100",
     reuseExistingServer: true,
     env: {
       ...process.env,
-      NODE_ENV: "development",
       JWT_SECRET: process.env.JWT_SECRET ?? "test-jwt-secret-1234567890",
       MONGODB_URI: "",
     },
