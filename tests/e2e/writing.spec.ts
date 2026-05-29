@@ -1,8 +1,10 @@
 import { expect, test } from "@playwright/test";
+import { createTestAuthToken } from "./helpers/auth-token";
 
 test("user can log in, submit writing, and see a band score", async ({ page }) => {
   const email = `e2e_${Date.now()}@example.com`;
   const password = "password12345";
+  const token = await createTestAuthToken(email);
 
   await page.route("**/api/writing/evaluate", async (route) => {
     await route.fulfill({
@@ -24,6 +26,44 @@ test("user can log in, submit writing, and see a band score", async ({ page }) =
           improvements: ["Add more specific examples"],
           summary: "This is a clear IELTS Task 2 response with logical progression.",
         },
+      }),
+    });
+  });
+
+  await page.route("**/api/exam/results", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ tests: [] }),
+    });
+  });
+
+  await page.route("**/api/practice/attempts", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        attempts: [],
+        analytics: {
+          moduleAverages: [],
+          totalAttempts: 0,
+          latestScore: null,
+        },
+      }),
+    });
+  });
+
+  await page.route("**/api/auth/register", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      headers: {
+        "set-cookie": `auth_token=${token}; Path=/; HttpOnly; SameSite=Lax`,
+      },
+      body: JSON.stringify({
+        ok: true,
+        message: "Registration successful",
+        user: { id: "mock-user-id", email, emailVerified: false },
       }),
     });
   });

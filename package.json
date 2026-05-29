@@ -7,7 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "typecheck": "tsc --noEmit",
     "test:auth": "node scripts/smoke-auth.mjs",
+    "test": "npm run test:unit && npm run test:e2e",
+    "test:unit": "vitest run",
     "test:e2e": "playwright test"
   },
   "dependencies": {
@@ -33,6 +36,7 @@
     "eslint-config-next": "16.2.2",
     "mongodb-memory-server": "^11.0.1",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.0.8"
   }
 }
