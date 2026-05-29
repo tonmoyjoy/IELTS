@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { CSRF_COOKIE, CSRF_HEADER, readCookieValue } from "./csrf";
 
 function toOrigin(value: string | undefined): string | null {
   const trimmed = value?.trim();
@@ -56,16 +57,32 @@ function getAllowedOrigins(req: Request): Set<string> {
 }
 
 export function requireSameOrigin(req: Request): NextResponse | null {
+  const fetchSite = req.headers.get("sec-fetch-site");
+  if (fetchSite === "cross-site") {
+    return NextResponse.json({ error: "Cross-site request blocked." }, { status: 403 });
+  }
+
   const origin = req.headers.get("origin");
-  if (!origin) return null;
+  const referer = req.headers.get("referer");
 
-  const parsedOrigin = toOrigin(origin);
-  if (parsedOrigin && getAllowedOrigins(req).has(parsedOrigin)) return null;
+  const sourceOrigin = origin ?? (referer ? toOrigin(referer) : null);
+  if (sourceOrigin) {
+    const parsedOrigin = toOrigin(sourceOrigin);
+    if (!parsedOrigin || !getAllowedOrigins(req).has(parsedOrigin)) {
+      return NextResponse.json(
+        { error: "Cross-origin request blocked. Add your deployed app URL to APP_URL or ALLOWED_ORIGINS." },
+        { status: 403 }
+      );
+    }
+  }
 
-  return NextResponse.json(
-    { error: "Cross-origin request blocked. Add your deployed app URL to APP_URL or ALLOWED_ORIGINS." },
-    { status: 403 }
-  );
+  const cookieToken = readCookieValue(req.headers.get("cookie"), CSRF_COOKIE);
+  const headerToken = req.headers.get(CSRF_HEADER);
+  if (!cookieToken || !headerToken || cookieToken !== headerToken) {
+    return NextResponse.json({ error: "Invalid or missing CSRF token." }, { status: 403 });
+  }
+
+  return null;
 }
 
 export function requireJson(req: Request): NextResponse | null {
