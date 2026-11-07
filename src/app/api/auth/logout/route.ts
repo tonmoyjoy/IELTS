@@ -1,18 +1,11 @@
 import { NextResponse } from "next/server";
-import { AUTH_COOKIE } from "@/lib/auth/constants";
-import { requireSameOrigin } from "@/lib/security/request-guards";
+import { handler } from "@/server/http/api";
+import { assertSameOrigin } from "@/server/http/guards";
+import { clearSessionCookie } from "@/server/auth/cookie";
 
-export async function POST(req: Request) {
-  const originError = requireSameOrigin(req);
-  if (originError) return originError;
-
-  const res = NextResponse.json({ ok: true });
-  res.cookies.set(AUTH_COOKIE, "", {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: 0,
-  });
+export const POST = handler("auth.logout", async (req) => {
+  assertSameOrigin(req);
+  const res = NextResponse.json({ ok: true }, { headers: { "Cache-Control": "no-store" } });
+  clearSessionCookie(res);
   return res;
-}
+});

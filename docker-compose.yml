@@ -1,0 +1,35 @@
+# Local full-stack run:  cp .env.example .env  (fill GEMINI_API_KEY)  &&  docker compose up --build
+# App: http://localhost:3000   MongoDB data persists in the "mongo-data" volume.
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      mongo:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      MONGODB_URI: mongodb://mongo:27017/ielts
+      APP_URL: ${APP_URL:-http://localhost:3000}
+      JWT_SECRET: ${JWT_SECRET:-change-me-local-docker-secret-at-least-32-chars}
+      EMAIL_TRANSPORT: ${EMAIL_TRANSPORT:-console}
+      # A single container can safely use the in-memory rate limiter.
+      RATE_LIMIT_STORE: ${RATE_LIMIT_STORE:-memory}
+
+volumes:
+  mongo-data:

@@ -1,104 +1,78 @@
-import { NextResponse } from "next/server";
 import { z } from "zod";
-import { connectDb } from "@/lib/db";
-import { PracticeAttempt } from "@/lib/models/PracticeAttempt";
-import { getSessionUserId } from "@/lib/auth/session";
-import { getClientIp, rateLimit } from "@/lib/security/rate-limit";
-import { requireSameOrigin } from "@/lib/security/request-guards";
+import { ApiError, handler, json, readJson } from "@/server/http/api";
+import { assertSameOrigin } from "@/server/http/guards";
+import { enforceRateLimit } from "@/server/security/rate-limit";
+import { requireApiUser } from "@/server/auth/session";
+import { createAttempt, listAttempts } from "@/server/services/attempts";
+import { gradeSet } from "@/server/practice/grading";
+import { getListeningScript } from "@/server/content/listening-scripts";
+import { getReadingSet } from "@/content/reading";
+import { getListeningSet } from "@/content/listening";
+import { isModule } from "@/lib/modules";
 
-const attemptSchema = z.object({
+const submitSchema = z.object({
   module: z.enum(["reading", "listening"]),
-  title: z.string().min(1).max(120),
-  rawScore: z.number().int().min(0),
-  totalQuestions: z.number().int().min(1).max(40),
-  summary: z.string().max(500).optional(),
-  details: z.unknown().optional(),
+  setId: z.string().min(1).max(80),
+  answers: z
+    .record(z.string().max(40), z.string().max(200))
+    .refine((value) => Object.keys(value).length <= 60, { message: "Too many answers." }),
 });
 
-function moduleAverages(attempts: Array<{ module: string; score: number }>) {
-  return ["speaking", "writing", "reading", "listening"].map((module) => {
-    const rows = attempts.filter((a) => a.module === module);
-    const average =
-      rows.length === 0
-        ? null
-        : Math.round((rows.reduce((sum, row) => sum + row.score, 0) / rows.length) * 10) / 10;
-    return { module, attempts: rows.length, average };
-  });
-}
-
-export async function GET() {
-  const userId = await getSessionUserId();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  await connectDb();
-  const attempts = await PracticeAttempt.find({ user: userId }).sort({ date: 1 }).lean();
-  const cleanAttempts = attempts.map((attempt) => ({
-    id: String(attempt._id),
-    module: attempt.module,
-    title: attempt.title,
-    score: attempt.score,
-    rawScore: attempt.rawScore,
-    totalQuestions: attempt.totalQuestions,
-    summary: attempt.summary,
-    details: attempt.details,
-    date: attempt.date,
-  }));
-
-  return NextResponse.json({
-    attempts: cleanAttempts,
-    analytics: {
-      moduleAverages: moduleAverages(cleanAttempts),
-      totalAttempts: cleanAttempts.length,
-      latestScore: cleanAttempts.at(-1)?.score ?? null,
-    },
-  });
-}
-
-export async function POST(req: Request) {
-  const originError = requireSameOrigin(req);
-  if (originError) return originError;
-
-  const userId = await getSessionUserId();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const limited = await rateLimit(`practice:${userId}:${getClientIp(req)}`, {
-    limit: 30,
-    windowMs: 60 * 60 * 1000,
-  });
-  if (limited) return limited;
-
-  const json = await req.json().catch(() => null);
-  const parsed = attemptSchema.safeParse(json);
-  if (!parsed.success) {
-    return NextResponse.json({ error: "Invalid practice attempt" }, { status: 400 });
+export const GET = handler("practice.list", async (req) => {
+  const user = await requireApiUser();
+  const url = new URL(req.url);
+  const moduleParam = url.searchParams.get("module");
+  const limit = Number(url.searchParams.get("limit") ?? "20");
+  const beforeParam = url.searchParams.get("before");
+  const before = beforeParam ? new Date(beforeParam) : undefined;
+  if (before && Number.isNaN(before.getTime())) {
+    throw new ApiError(400, "INVALID_CURSOR", "Invalid pagination cursor.");
   }
 
-  const { module, title, rawScore, totalQuestions, summary, details } = parsed.data;
-  const score = Math.round((rawScore / totalQuestions) * 9 * 2) / 2;
+  const result = await listAttempts(user.id, {
+    module: isModule(moduleParam) ? moduleParam : undefined,
+    contentId: url.searchParams.get("contentId") ?? undefined,
+    limit: Number.isFinite(limit) ? limit : 20,
+    before,
+  });
+  return json(result);
+});
 
-  await connectDb();
-  const attempt = await PracticeAttempt.create({
-    user: userId,
-    module,
-    title,
-    score,
-    rawScore,
-    totalQuestions,
-    summary,
-    details,
+/**
+ * Grades a reading or listening attempt on the server. The client sends only
+ * its answers; the score is computed here from server-only answer keys.
+ */
+export const POST = handler("practice.submit", async (req) => {
+  assertSameOrigin(req);
+  const user = await requireApiUser();
+  await enforceRateLimit([{ key: `practice:user:${user.id}`, limit: 60, windowSeconds: 60 * 60 }]);
+
+  const body = await readJson(req, submitSchema);
+  const set = body.module === "reading" ? getReadingSet(body.setId) : getListeningSet(body.setId);
+  if (!set) throw new ApiError(404, "SET_NOT_FOUND", "That practice set does not exist.");
+
+  const grade = gradeSet(body.module, set.groups, body.answers);
+  const transcript =
+    body.module === "listening" ? (getListeningScript(set.id)?.lines ?? []) : undefined;
+
+  const attempt = await createAttempt({
+    userId: user.id,
+    module: body.module,
+    contentId: set.id,
+    title: set.title,
+    score: grade.band,
+    rawScore: grade.rawScore,
+    totalQuestions: grade.totalQuestions,
+    summary: `${grade.rawScore}/${grade.totalQuestions} correct`,
+    details: { results: grade.results },
   });
 
-  return NextResponse.json({
-    ok: true,
-    attempt: {
-      id: String(attempt._id),
-      module: attempt.module,
-      title: attempt.title,
-      score: attempt.score,
-      rawScore: attempt.rawScore,
-      totalQuestions: attempt.totalQuestions,
-      summary: attempt.summary,
-      date: attempt.date,
+  return json(
+    {
+      attempt,
+      grade,
+      transcript,
     },
-  });
-}
+    { status: 201 }
+  );
+});

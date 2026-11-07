@@ -1,46 +1,23 @@
-import { NextResponse } from "next/server";
-import { z } from "zod";
-import { connectDb } from "@/lib/db";
-import { User } from "@/lib/models/User";
-import { createActionToken, getAppUrl } from "@/lib/auth/tokens";
-import { sendEmail } from "@/lib/email/send-email";
-import { getClientIp, rateLimit } from "@/lib/security/rate-limit";
-import { requireSameOrigin } from "@/lib/security/request-guards";
+import { handler, json, readJson } from "@/server/http/api";
+import { assertSameOrigin } from "@/server/http/guards";
+import { getClientIp } from "@/server/http/client-ip";
+import { enforceRateLimit } from "@/server/security/rate-limit";
+import { emailOnlySchema } from "@/server/auth/schemas";
+import { normalizeEmail, requestPasswordReset } from "@/server/services/auth";
 
-const bodySchema = z.object({ email: z.string().email() });
+export const POST = handler("auth.forgot_password", async (req) => {
+  assertSameOrigin(req);
+  const ip = getClientIp(req.headers);
+  await enforceRateLimit([{ key: `forgot:ip:${ip}`, limit: 5, windowSeconds: 15 * 60 }]);
 
-export async function POST(req: Request) {
-  const originError = requireSameOrigin(req);
-  if (originError) return originError;
+  const body = await readJson(req, emailOnlySchema);
+  await enforceRateLimit([
+    { key: `forgot:email:${normalizeEmail(body.email)}`, limit: 3, windowSeconds: 60 * 60 },
+  ]);
 
-  const limited = await rateLimit(`forgot:${getClientIp(req)}`, { limit: 5, windowMs: 10 * 60 * 1000 });
-  if (limited) return limited;
-
-  const json = await req.json().catch(() => null);
-  const parsed = bodySchema.safeParse(json);
-  if (!parsed.success) return NextResponse.json({ error: "Enter a valid email address" }, { status: 400 });
-
-  await connectDb();
-  const user = await User.findOne({ email: parsed.data.email.toLowerCase().trim() });
-  let resetUrl: string | undefined;
-
-  if (user) {
-    const resetToken = createActionToken();
-    resetUrl = `${getAppUrl()}/reset-password?token=${resetToken.token}`;
-    user.passwordResetTokenHash = resetToken.hash;
-    user.passwordResetExpires = new Date(Date.now() + 1000 * 60 * 30);
-    await user.save();
-    const emailResult = await sendEmail({
-      to: user.email,
-      subject: "Reset your IELTS Practice Studio password",
-      html: `<p>Reset your password here: <a href="${resetUrl}">${resetUrl}</a></p><p>This link expires in 30 minutes.</p>`,
-    });
-    if (emailResult.sent) resetUrl = undefined;
-  }
-
-  return NextResponse.json({
-    ok: true,
-    message: "If that email exists, a reset link has been sent.",
-    resetUrl,
-  });
-}
+  await requestPasswordReset(body.email);
+  return json(
+    { ok: true, message: "If an account exists for that email, we sent a password reset link." },
+    { status: 202 }
+  );
+});

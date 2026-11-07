@@ -1,32 +1,16 @@
-import { NextResponse } from "next/server";
-import { z } from "zod";
-import { connectDb } from "@/lib/db";
-import { User } from "@/lib/models/User";
-import { hashActionToken } from "@/lib/auth/tokens";
-import { requireSameOrigin } from "@/lib/security/request-guards";
+import { handler, json, readJson } from "@/server/http/api";
+import { assertSameOrigin } from "@/server/http/guards";
+import { getClientIp } from "@/server/http/client-ip";
+import { enforceRateLimit } from "@/server/security/rate-limit";
+import { tokenOnlySchema } from "@/server/auth/schemas";
+import { verifyEmailToken } from "@/server/services/auth";
 
-const bodySchema = z.object({ token: z.string().min(20) });
+export const POST = handler("auth.verify_email", async (req) => {
+  assertSameOrigin(req);
+  const ip = getClientIp(req.headers);
+  await enforceRateLimit([{ key: `verify:ip:${ip}`, limit: 20, windowSeconds: 15 * 60 }]);
 
-export async function POST(req: Request) {
-  const originError = requireSameOrigin(req);
-  if (originError) return originError;
-
-  const json = await req.json().catch(() => null);
-  const parsed = bodySchema.safeParse(json);
-  if (!parsed.success) return NextResponse.json({ error: "Invalid verification token" }, { status: 400 });
-
-  await connectDb();
-  const user = await User.findOne({
-    emailVerificationTokenHash: hashActionToken(parsed.data.token),
-    emailVerificationExpires: { $gt: new Date() },
-  }).select("+emailVerificationTokenHash");
-
-  if (!user) return NextResponse.json({ error: "Verification link is invalid or expired" }, { status: 400 });
-
-  user.emailVerified = true;
-  user.emailVerificationTokenHash = undefined;
-  user.emailVerificationExpires = undefined;
-  await user.save();
-
-  return NextResponse.json({ ok: true, message: "Email verified successfully" });
-}
+  const body = await readJson(req, tokenOnlySchema);
+  await verifyEmailToken(body.token);
+  return json({ ok: true, message: "Email verified. You can now sign in." });
+});

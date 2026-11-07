@@ -1,71 +1,27 @@
 import { NextResponse } from "next/server";
-import bcrypt from "bcryptjs";
-import { z } from "zod";
-import { connectDb } from "@/lib/db";
-import { User } from "@/lib/models/User";
-import { signAuthToken } from "@/lib/auth/jwt";
-import { AUTH_COOKIE } from "@/lib/auth/constants";
-import { authErrorResponse } from "@/lib/api/auth-errors";
-import { getClientIp, rateLimit } from "@/lib/security/rate-limit";
-import { requireSameOrigin } from "@/lib/security/request-guards";
+import { handler, readJson } from "@/server/http/api";
+import { assertSameOrigin } from "@/server/http/guards";
+import { getClientIp } from "@/server/http/client-ip";
+import { enforceRateLimit } from "@/server/security/rate-limit";
+import { loginSchema } from "@/server/auth/schemas";
+import { authenticate, normalizeEmail } from "@/server/services/auth";
+import { signSessionToken } from "@/server/auth/jwt";
+import { setSessionCookie } from "@/server/auth/cookie";
 
-const bodySchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(1),
+export const POST = handler("auth.login", async (req) => {
+  assertSameOrigin(req);
+  const ip = getClientIp(req.headers);
+  await enforceRateLimit([{ key: `login:ip:${ip}`, limit: 20, windowSeconds: 15 * 60 }]);
+
+  const body = await readJson(req, loginSchema);
+  await enforceRateLimit([
+    { key: `login:email:${normalizeEmail(body.email)}`, limit: 10, windowSeconds: 15 * 60 },
+  ]);
+
+  const account = await authenticate(body.email, body.password);
+  const token = await signSessionToken(account.id, account.tokenVersion);
+
+  const res = NextResponse.json({ ok: true }, { headers: { "Cache-Control": "no-store" } });
+  setSessionCookie(res, token);
+  return res;
 });
-
-export async function POST(req: Request) {
-  try {
-    const originError = requireSameOrigin(req);
-    if (originError) return originError;
-
-    const limited = await rateLimit(`login:${getClientIp(req)}`, {
-      limit: 10,
-      windowMs: 10 * 60 * 1000,
-    });
-    if (limited) return limited;
-
-    let json: unknown;
-    try {
-      json = await req.json();
-    } catch {
-      return NextResponse.json({ error: "Expected a JSON body with email and password" }, { status: 400 });
-    }
-
-    const parsed = bodySchema.safeParse(json);
-    if (!parsed.success) {
-      return authErrorResponse(parsed.error, "login");
-    }
-
-    const email = parsed.data.email.toLowerCase().trim();
-    const { password } = parsed.data;
-    await connectDb();
-
-    const user = await User.findOne({ email }).select("+password").exec();
-    if (!user?.password) {
-      return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
-    }
-
-    const ok = await bcrypt.compare(password, user.password);
-    if (!ok) {
-      return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
-    }
-
-    const token = await signAuthToken(String(user._id), user.email);
-    const res = NextResponse.json({
-      ok: true,
-      user: { id: String(user._id), email: user.email, emailVerified: user.emailVerified },
-      warning: user.emailVerified ? undefined : "Please verify your email to secure your account.",
-    });
-    res.cookies.set(AUTH_COOKIE, token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: 60 * 60 * 24 * 7,
-    });
-    return res;
-  } catch (e: unknown) {
-    return authErrorResponse(e, "login");
-  }
-}

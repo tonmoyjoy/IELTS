@@ -1,21 +1,9 @@
-import { NextResponse } from "next/server";
-import { connectDb } from "@/lib/db";
-import { User } from "@/lib/models/User";
-import { getSessionUserId } from "@/lib/auth/session";
+import { handler, json } from "@/server/http/api";
+import { requireApiUser } from "@/server/auth/session";
+import { getUsageSummary } from "@/server/billing/quota";
 
-export async function GET() {
-  const userId = await getSessionUserId();
-  if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  await connectDb();
-  const user = await User.findById(userId).lean();
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  return NextResponse.json({
-    user: { id: String(user._id), email: user.email },
-  });
-}
+export const GET = handler("auth.me", async () => {
+  const user = await requireApiUser();
+  const usage = await getUsageSummary(user.id, user.plan);
+  return json({ user, usage });
+});
