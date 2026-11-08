@@ -16,16 +16,16 @@ export function TrendChart({ points, target }: { points: Point[]; target: number
     <div className="h-64 w-full" role="img" aria-label={`Line chart of your last ${points.length} band scores`}>
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data} margin={{ top: 8, right: 16, bottom: 0, left: -16 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="currentColor" className="text-zinc-200 dark:text-zinc-800" />
-          <XAxis dataKey="index" tick={{ fontSize: 11, fill: "#71717a" }} tickLine={false} />
-          <YAxis domain={[0, 9]} ticks={[0, 3, 5, 6, 7, 8, 9]} tick={{ fontSize: 11, fill: "#71717a" }} tickLine={false} />
-          <ReferenceLine y={target} stroke="#f59e0b" strokeDasharray="4 4" label={{ value: "Target", fontSize: 11, fill: "#b45309", position: "insideTopRight" }} />
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--line)" />
+          <XAxis dataKey="index" tick={{ fontSize: 11, fill: "var(--ink-soft)" }} stroke="var(--line-strong)" tickLine={false} />
+          <YAxis domain={[0, 9]} ticks={[0, 3, 5, 6, 7, 8, 9]} tick={{ fontSize: 11, fill: "var(--ink-soft)" }} stroke="var(--line-strong)" tickLine={false} />
+          <ReferenceLine y={target} stroke="var(--warn)" strokeDasharray="4 4" label={{ value: "Target", fontSize: 11, fill: "var(--warn)", position: "insideTopRight" }} />
           <Tooltip
             formatter={(value) => [`Band ${value}`, "Score"]}
             labelFormatter={(_, payload) => (payload?.[0]?.payload as { label?: string } | undefined)?.label ?? ""}
-            contentStyle={{ borderRadius: 8, fontSize: 12 }}
+            contentStyle={{ borderRadius: 12, fontSize: 12, background: "var(--raised)", border: "1px solid var(--line)", color: "var(--ink)" }}
           />
-          <Line type="monotone" dataKey="score" stroke="#059669" strokeWidth={2} dot={{ r: 3 }} isAnimationActive={false} />
+          <Line type="monotone" dataKey="score" stroke="var(--accent)" strokeWidth={2.5} dot={{ r: 3.5, strokeWidth: 0, fill: "var(--accent)" }} isAnimationActive={false} />
         </LineChart>
       </ResponsiveContainer>
     </div>

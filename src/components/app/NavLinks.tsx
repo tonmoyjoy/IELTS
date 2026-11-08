@@ -15,7 +15,7 @@ const LINKS = [
 export function NavLinks() {
   const pathname = usePathname();
   return (
-    <nav aria-label="Main" className="order-last flex w-full gap-1 overflow-x-auto md:order-none md:w-auto">
+    <nav aria-label="Main" className="order-last -mx-1 flex w-full gap-1 overflow-x-auto pb-1 md:order-none md:mx-0 md:w-auto md:pb-0">
       {LINKS.map((link) => {
         const active = pathname === link.href || pathname.startsWith(`${link.href}/`);
         return (
@@ -23,10 +23,8 @@ export function NavLinks() {
             key={link.href}
             href={link.href}
             aria-current={active ? "page" : undefined}
-            className={`whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-              active
-                ? "bg-emerald-50 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-200"
-                : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-white"
+            className={`whitespace-nowrap rounded-xl px-3 py-1.5 text-sm font-medium transition-colors ${
+              active ? "bg-accent-soft text-accent-text" : "text-ink-soft hover:bg-sunken hover:text-ink"
             }`}
           >
             {link.label}

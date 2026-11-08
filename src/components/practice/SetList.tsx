@@ -16,13 +16,13 @@ export function SetList({ items }: { items: SetListItem[] }) {
         <Link key={item.href} href={item.href} className="group">
           <Card className="flex h-full flex-col p-5 transition-shadow group-hover:shadow-md">
             <div className="flex items-start justify-between gap-3">
-              <h2 className="font-semibold text-zinc-950 group-hover:text-emerald-700 dark:text-white dark:group-hover:text-emerald-400">
+              <h2 className="font-semibold text-ink group-hover:text-accent-text">
                 {item.title}
               </h2>
               {item.best != null && <BandBadge score={item.best} size="sm" />}
             </div>
-            <p className="mt-2 flex-1 text-sm leading-6 text-zinc-600 dark:text-zinc-400">{item.summary}</p>
-            <p className="mt-4 text-xs text-zinc-500">{item.meta}{item.best != null ? " · your best shown" : ""}</p>
+            <p className="mt-2 flex-1 text-sm leading-6 text-ink-soft">{item.summary}</p>
+            <p className="mt-4 text-xs text-ink-faint">{item.meta}{item.best != null ? " · your best shown" : ""}</p>
           </Card>
         </Link>
       ))}

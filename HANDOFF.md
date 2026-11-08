@@ -2,8 +2,9 @@
 
 Read this first. It explains what the project is, what it looked like before the
 hardening pass, what was changed and why, the rules not to break, and what to do
-next. Commit `cba51c1` on branch `hardening` contains the whole pass (`main` is
-the original). Run `git diff main hardening` for line-level detail.
+next. Branch `hardening` contains all work (`main` is the original). Commits:
+`cba51c1` hardening pass · `1a93629` this file · then the redesign + payments
+commit (section 3b). Run `git diff main hardening` for line-level detail.
 
 ---
 
@@ -18,12 +19,14 @@ A paid-to-be IELTS Academic practice web app. Users practise four modules:
 | Writing | Gemini AI examiner, 4 official criteria → overall band computed by server |
 | Speaking | Gemini hears the audio, 4 official criteria → overall band computed by server |
 
-The owner plans to publish it and add payments. A `free`/`pro` plan system with
-daily AI quotas already exists; payments only need to set `user.plan`.
+Monetisation is built in: Free (3 Writing + 3 Speaking AI checks/day) and
+prepaid Pro (30 + 30/day) sold through SSLCommerz (bKash, Nagad, Rocket,
+Visa/Mastercard/Amex): ৳300 / 30 days, ৳600 / 90 days, ৳1,500 / 365 days.
+No auto-renewal; buying again extends the expiry.
 
 **Stack:** Next.js 16.4 (App Router, Turbopack, `src/proxy.ts` replaces
 middleware), React 19, TypeScript strict, Tailwind 4, MongoDB + Mongoose 9,
-`@google/genai` (Gemini), Zod 4, Vitest 5, Playwright 1.63, optional Sentry.
+`@google/genai` (Gemini), SSLCommerz, Zod 4, Vitest 5, Playwright 1.63, optional Sentry.
 
 > Next.js 16 differs from older training data. Read the relevant guide in
 > `node_modules/next/dist/docs/` before changing framework-level code
@@ -147,6 +150,47 @@ dead toolbar buttons), Task 1 charts never shown to the student, deprecated
 - Fonts from the `geist` package (no network at build).
 - Upgraded: next 16.4.5, zod 4.6.7, mongoose 9.12 (fixed critical/high CVEs).
 
+### 3b. Redesign + payments (second pass)
+
+**Design system — "Warm Sepia" (owner's choice, built for 3-hour sessions)**
+- All colours are semantic tokens in `src/app/globals.css` (`paper`, `surface`,
+  `sunken`, `raised`, `ink`, `ink-soft`, `ink-faint`, `line`, `line-strong`,
+  `accent`, `accent-text`, `accent-btn`, `on-accent`, `accent-soft`, `good`,
+  `bad`, `warn`, `info` + `-soft`, `chart-1..5`). Use classes like `bg-surface
+  text-ink border-line`. **Never use raw palette classes (zinc/emerald…) or
+  `dark:` colour variants** — dark mode is a token swap under `.dark`.
+- Every text token meets WCAG AA (≥4.5:1) on paper/surface/sunken in both modes.
+- Dark mode is class-based (`@custom-variant dark`). Preference (Auto/Light/Dark),
+  text size (md/lg/xl → `html[data-text]`) and eye-rest reminders live in
+  `src/lib/preferences.ts`, applied before paint by a nonce'd inline script in
+  `src/app/layout.tsx`; UI in `components/app/ComfortMenu.tsx`;
+  20-20-20 reminder in `components/app/BreakReminder.tsx`.
+- Fonts: Geist (UI) + Literata serif (vendored in `src/app/fonts`, OFL) via the
+  `.prose-reading` class for passages, essays, prompts and transcripts.
+- Primitives in `src/components/ui.tsx` (`Button`, `Card`, `Alert`, `Chip`,
+  `ProgressBar`, `BandBadge`, `PageHeader`, `inputClass`, `labelClass`).
+  Logo in `components/app/Logo.tsx`. Charts use `var(--chart-n)` + dash patterns.
+
+**Payments (`src/server/billing/*`, `src/app/api/billing/*`, `/billing` page)**
+- `lib/plans.ts`: `BILLING_OPTIONS` (prices/days), `effectivePlan(plan, planExpiresAt)`.
+  `User.planExpiresAt` added; session exposes `plan` (effective) + `planExpiresAt`.
+- `models/Payment.ts`: tranId (unique), optionId, days, amount, status
+  `pending|paid|failed|cancelled|review`, valId, cardType, riskLevel, grantedUntil.
+- Flow: `POST /api/billing/checkout {optionId, name, phone}` → pending Payment +
+  SSLCommerz session (`sslcommerz.ts`) → redirect to hosted page → gateway POSTs
+  browser to `/api/billing/sslcommerz/{success,fail,cancel}` (cross-site; no CSRF
+  guard, nothing trusted) and server-to-server to `/ipn`.
+- `confirmPayment(valId, tranId)` calls the **validation API** and only then:
+  checks tran_id, amount and currency vs DB; `risk_level=1` or mismatch →
+  `review` (no Pro); otherwise atomically claims `status: paid` once and extends
+  `planExpiresAt` from max(now, current expiry) with compare-and-set.
+- Callbacks are rate-limited per IP. Fail/cancel only downgrade `pending`; a later
+  valid payment still succeeds.
+- Env: `SSLCOMMERZ_STORE_ID`, `SSLCOMMERZ_STORE_PASSWORD`, `SSLCOMMERZ_MODE`
+  (`sandbox`|`live`), `SSLCOMMERZ_BASE_URL` (tests only). Without credentials the
+  billing page shows "being set up".
+- E2E uses `tests/support/fake-sslcommerz.mjs` (fake init/pay page/validation on :4600).
+
 ---
 
 ## 4. Rules — do not break these
@@ -164,6 +208,10 @@ dead toolbar buttons), Task 1 charts never shown to the student, deprecated
 7. **Route files (`route.ts`) may only export HTTP methods and route config**
    (e.g. `maxDuration`); Next fails the build otherwise.
 8. Use `updateOne` + `matchedCount` rather than `findOneAndUpdate` with projections.
+9. **Styling:** only semantic token classes; no raw palette colours or `dark:` colour
+   variants; long text uses `.prose-reading`. Check contrast if you add tokens.
+10. **Payments:** never grant Pro from callback data; only `confirmPayment()` after the
+    validation API. Prices come from `BILLING_OPTIONS`, never the client.
 
 ---
 
@@ -171,9 +219,9 @@ dead toolbar buttons), Task 1 charts never shown to the student, deprecated
 
 | Command | Notes |
 | --- | --- |
-| `npm test` | 121 unit tests, no DB |
-| `npm run test:integration` | 33 tests; real DB via `TEST_MONGODB_URI`, else mongodb-memory-server |
-| `npm run build && npm run test:e2e` | 21 Playwright tests vs production build; `E2E_MONGODB_URI` |
+| `npm test` | 124 unit tests, no DB |
+| `npm run test:integration` | 44 tests (incl. 11 payment cases); real DB via `TEST_MONGODB_URI`, else mongodb-memory-server |
+| `npm run build && npm run test:e2e` | 25 Playwright tests vs production build + fake gateway; `E2E_MONGODB_URI` |
 | `npm run verify` | lint + typecheck + unit + build |
 
 Gotchas learned:
@@ -198,6 +246,9 @@ Gotchas learned:
 - Logout clears this browser's cookie only (no "sign out everywhere" button yet).
 - No account deletion / data export, privacy policy or terms yet.
 - Concurrent-quota test has only run against FerretDB (skipped), not real MongoDB.
+- Payments tested only against a fake gateway + mocked API; not yet run against the
+  real SSLCommerz sandbox. No admin UI for "review" payments (resolve in the DB:
+  set Payment `status: "paid"` and extend the user's `planExpiresAt`), no refunds UI.
 
 ---
 
@@ -215,11 +266,10 @@ Gotchas learned:
    `APP_URL`; Upstash if serverless. Then `BASE_URL=... npm run test:smoke`.
 
 **Monetisation**
-7. Payments: webhook sets `user.plan`; add `planExpiresAt` and a billing page.
-   For Bangladesh, a local gateway (e.g. SSLCommerz / bKash); for international
-   cards, a merchant-of-record (e.g. Paddle or Lemon Squeezy). Check each
-   provider's current country support first.
-8. Pricing page; show remaining quota and an upgrade prompt on `QUOTA_EXCEEDED`.
+7. Test with real SSLCommerz sandbox credentials (put them in `.env.local`, buy a
+   plan with their test bKash/card details), then apply for a live merchant account,
+   set `SSLCOMMERZ_MODE=live`, and register the IPN URL in the merchant panel.
+8. Small admin page for "review" payments and manual Pro grants; email receipts.
 
 **Product growth**
 9. More content: full 40-question reading/listening tests, more writing and

@@ -37,7 +37,14 @@ export default defineConfig({
       dependencies: ["setup"],
     },
   ],
-  webServer: {
+  webServer: [
+    {
+      command: "node tests/support/fake-sslcommerz.mjs",
+      url: "http://localhost:4600/health",
+      reuseExistingServer: !process.env.CI,
+      env: { PORT: "4600" },
+    },
+    {
     command: `npx next start --port ${PORT}`,
     url: `${BASE_URL}/api/health`,
     reuseExistingServer: !process.env.CI,
@@ -49,6 +56,10 @@ export default defineConfig({
       APP_URL: BASE_URL,
       EMAIL_TRANSPORT: "console",
       GEMINI_API_KEY: "",
+      SSLCOMMERZ_STORE_ID: "teststore",
+      SSLCOMMERZ_STORE_PASSWORD: "teststore@ssl",
+      SSLCOMMERZ_BASE_URL: "http://localhost:4600",
     },
-  },
+    },
+  ],
 });

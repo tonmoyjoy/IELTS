@@ -1,18 +1,125 @@
 @import "tailwindcss";
 
-@theme inline {
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
-}
+/*
+ * Warm Sepia design system.
+ *
+ * Every colour is a semantic token, so components never pick raw palette
+ * colours and dark mode is a single class swap on <html>. All text tokens
+ * meet WCAG AA (4.5:1) on paper, surface and sunken backgrounds in both
+ * modes. Backgrounds avoid pure white/black to reduce glare during long
+ * practice sessions.
+ */
+
+@custom-variant dark (&:where(.dark, .dark *));
 
 :root {
+  --paper: #f4ecd8;
+  --surface: #f9f3e3;
+  --sunken: #ede3cb;
+  --raised: #fdf8ec;
+  --ink: #433422;
+  --ink-soft: #6b5843;
+  --ink-faint: #75634d;
+  --line: #dccfb2;
+  --line-strong: #c9b892;
+  --accent: #b5762b;
+  --accent-text: #85501a;
+  --accent-btn: #9c5f1e;
+  --accent-btn-hover: #8a5318;
+  --on-accent: #fff8ea;
+  --accent-soft: #f1dfbd;
+  --good: #3f6830;
+  --good-soft: #e3e8cc;
+  --bad: #a6402e;
+  --bad-soft: #f3d9cc;
+  --warn: #80570c;
+  --warn-soft: #f3e2b6;
+  --info: #36606f;
+  --info-soft: #dce4dc;
+  --shadow: 37 26 12;
+  --chart-1: #b5762b;
+  --chart-2: #3f7a8c;
+  --chart-3: #a6402e;
+  --chart-4: #5f7a3a;
+  --chart-5: #7a5378;
   color-scheme: light;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    color-scheme: dark;
-  }
+.dark {
+  --paper: #1b1712;
+  --surface: #26201a;
+  --sunken: #211c16;
+  --raised: #2e2720;
+  --ink: #e3d6be;
+  --ink-soft: #bbaa8e;
+  --ink-faint: #968670;
+  --line: #3a3127;
+  --line-strong: #4d4134;
+  --accent: #d79a4e;
+  --accent-text: #e2aa62;
+  --accent-btn: #d79a4e;
+  --accent-btn-hover: #e2aa62;
+  --on-accent: #1b1712;
+  --accent-soft: #3a2c1c;
+  --good: #97be7e;
+  --good-soft: #27301e;
+  --bad: #e58a74;
+  --bad-soft: #3a221c;
+  --warn: #e2b45a;
+  --warn-soft: #382c16;
+  --info: #8db9cc;
+  --info-soft: #1d2a2e;
+  --shadow: 0 0 0;
+  --chart-1: #d79a4e;
+  --chart-2: #7fb7c8;
+  --chart-3: #e58a74;
+  --chart-4: #a9c088;
+  --chart-5: #c39ac0;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-sunken: var(--sunken);
+  --color-raised: var(--raised);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-faint: var(--ink-faint);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-accent: var(--accent);
+  --color-accent-text: var(--accent-text);
+  --color-accent-btn: var(--accent-btn);
+  --color-accent-btn-hover: var(--accent-btn-hover);
+  --color-on-accent: var(--on-accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-good: var(--good);
+  --color-good-soft: var(--good-soft);
+  --color-bad: var(--bad);
+  --color-bad-soft: var(--bad-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-literata), Georgia, "Times New Roman", serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  --shadow-soft: 0 1px 2px rgb(var(--shadow) / 0.06), 0 4px 16px -6px rgb(var(--shadow) / 0.12);
+  --shadow-lift: 0 2px 4px rgb(var(--shadow) / 0.06), 0 12px 32px -12px rgb(var(--shadow) / 0.22);
+}
+
+/* Comfort setting: text size (set on <html> by the comfort menu). */
+html {
+  font-size: 16px;
+}
+html[data-text="lg"] {
+  font-size: 17.5px;
+}
+html[data-text="xl"] {
+  font-size: 19px;
 }
 
 html,
@@ -21,14 +128,38 @@ body {
 }
 
 body {
+  background: var(--paper);
+  color: var(--ink);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+::selection {
+  background: var(--accent-soft);
+  color: var(--ink);
+}
+
+/* Long-form reading: passages, essays, transcripts. */
+.prose-reading {
+  font-family: var(--font-serif);
+  font-size: 1.0625rem;
+  line-height: 1.85;
+  letter-spacing: 0.003em;
+  color: var(--ink);
 }
 
 /* Visible keyboard focus everywhere, without affecting mouse users. */
-:where(a, button, input, select, textarea, [tabindex]):focus-visible {
-  outline: 2px solid #10b981;
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
+  border-radius: 6px;
+}
+
+input[type="radio"],
+input[type="checkbox"] {
+  accent-color: var(--accent-btn);
 }
 
 @media (prefers-reduced-motion: reduce) {

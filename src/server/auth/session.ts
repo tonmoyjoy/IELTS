@@ -8,13 +8,15 @@ import { User } from "@/server/models/User";
 import { verifySessionToken } from "@/server/auth/jwt";
 import { sessionCookieName } from "@/server/auth/cookie";
 import { ApiError } from "@/server/http/api";
-import { getPlan, type PlanId } from "@/lib/plans";
+import { effectivePlan, type PlanId } from "@/lib/plans";
 
 export type SessionUser = {
   id: string;
   email: string;
   emailVerified: boolean;
   plan: PlanId;
+  /** ISO date the paid plan ends, if any. */
+  planExpiresAt: string | null;
   targetBand: number;
 };
 
@@ -33,7 +35,7 @@ export const getSessionUser = cache(async (): Promise<SessionUser | null> => {
 
   await connectDb();
   const user = await User.findById(new Types.ObjectId(claims.sub))
-    .select("email emailVerified plan targetBand tokenVersion")
+    .select("email emailVerified plan planExpiresAt targetBand tokenVersion")
     .lean();
   if (!user || (user.tokenVersion ?? 0) !== claims.tv) return null;
 
@@ -41,7 +43,8 @@ export const getSessionUser = cache(async (): Promise<SessionUser | null> => {
     id: String(user._id),
     email: user.email,
     emailVerified: Boolean(user.emailVerified),
-    plan: getPlan(user.plan).id,
+    plan: effectivePlan(user.plan, user.planExpiresAt),
+    planExpiresAt: user.planExpiresAt && effectivePlan(user.plan, user.planExpiresAt) === "pro" ? user.planExpiresAt.toISOString() : null,
     targetBand: user.targetBand ?? 7,
   };
 });

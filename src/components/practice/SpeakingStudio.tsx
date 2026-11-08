@@ -18,8 +18,8 @@ export function SpeakingStudio({ sets, active, remainingEvaluations }: { sets: S
             aria-current={set.id === active.id ? "true" : undefined}
             className={`rounded-full px-3 py-1.5 text-sm font-medium ${
               set.id === active.id
-                ? "bg-emerald-600 text-white"
-                : "border border-zinc-300 text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                ? "bg-accent-btn text-on-accent"
+                : "border border-line-strong text-ink-soft hover:bg-sunken"
             }`}
           >
             {set.title}
@@ -30,17 +30,17 @@ export function SpeakingStudio({ sets, active, remainingEvaluations }: { sets: S
       <div className="grid gap-4 md:grid-cols-3">
         <Card className="p-5">
           <h2 className="text-sm font-semibold">Part 1 · Interview</h2>
-          <ul className="mt-2 space-y-1.5 text-sm text-zinc-700 dark:text-zinc-300">{active.part1.map((q) => <li key={q}>{q}</li>)}</ul>
+          <ul className="mt-2 space-y-1.5 text-sm text-ink-soft">{active.part1.map((q) => <li key={q}>{q}</li>)}</ul>
         </Card>
-        <Card className="border-emerald-300 p-5 dark:border-emerald-800">
+        <Card className="border-accent p-5">
           <h2 className="text-sm font-semibold">Part 2 · Cue card</h2>
           <p className="mt-2 text-sm font-medium">{active.part2.cue}</p>
-          <p className="mt-2 text-xs text-zinc-500">You should say:</p>
-          <ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-zinc-700 dark:text-zinc-300">{active.part2.bullets.map((b) => <li key={b}>{b}</li>)}</ul>
+          <p className="mt-2 text-xs text-ink-faint">You should say:</p>
+          <ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-ink-soft">{active.part2.bullets.map((b) => <li key={b}>{b}</li>)}</ul>
         </Card>
         <Card className="p-5">
           <h2 className="text-sm font-semibold">Part 3 · Discussion</h2>
-          <ul className="mt-2 space-y-1.5 text-sm text-zinc-700 dark:text-zinc-300">{active.part3.map((q) => <li key={q}>{q}</li>)}</ul>
+          <ul className="mt-2 space-y-1.5 text-sm text-ink-soft">{active.part3.map((q) => <li key={q}>{q}</li>)}</ul>
         </Card>
       </div>
 

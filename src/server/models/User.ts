@@ -13,8 +13,10 @@ const userSchema = new Schema(
     passwordResetExpires: { type: Date },
     /** Bumped to revoke every session issued before (password reset, sign out everywhere). */
     tokenVersion: { type: Number, default: 0 },
-    /** Billing plan. Payment integration flips this; quotas read it. */
+    /** Billing plan; read through effectivePlan() so expiry is respected. */
     plan: { type: String, enum: PLAN_IDS, default: "free" },
+    /** End of the paid period. Absent with plan "pro" means a manual, non-expiring grant. */
+    planExpiresAt: { type: Date },
     targetBand: { type: Number, min: 1, max: 9, default: 7 },
     lastLoginAt: { type: Date },
   },

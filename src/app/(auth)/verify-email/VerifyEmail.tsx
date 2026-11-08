@@ -40,7 +40,7 @@ export function VerifyEmail({ token }: { token: string }) {
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-zinc-600 dark:text-zinc-400">Confirm your email address to activate your account.</p>
+      <p className="text-sm text-ink-soft">Confirm your email address to activate your account.</p>
       {state === "error" && (
         <Alert tone="error">
           {message} <Link href="/login" className="font-medium underline">Sign in</Link> to request a new link.

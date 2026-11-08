@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { apiFetch, firstFieldError } from "@/lib/api-client";
-import { Alert, Button, ButtonLink, inputClass } from "@/components/ui";
+import { Alert, Button, ButtonLink, inputClass, labelClass } from "@/components/ui";
 
 export function ResetPasswordForm({ token }: { token: string }) {
   const [password, setPassword] = useState("");
@@ -41,12 +41,12 @@ export function ResetPasswordForm({ token }: { token: string }) {
   return (
     <form onSubmit={onSubmit} className="space-y-4" noValidate>
       <div>
-        <label htmlFor="password" className="text-sm font-medium text-zinc-700 dark:text-zinc-300">New password</label>
+        <label htmlFor="password" className={labelClass}>New password</label>
         <input id="password" type="password" autoComplete="new-password" required minLength={8} value={password}
           onChange={(e) => setPassword(e.target.value)} className={inputClass} />
       </div>
       <div>
-        <label htmlFor="confirm" className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Confirm new password</label>
+        <label htmlFor="confirm" className={labelClass}>Confirm new password</label>
         <input id="confirm" type="password" autoComplete="new-password" required minLength={8} value={confirm}
           onChange={(e) => setConfirm(e.target.value)} className={inputClass} />
       </div>

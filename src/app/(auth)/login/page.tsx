@@ -16,7 +16,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
       footer={
         <>
           New here?{" "}
-          <Link href="/register" className="font-medium text-emerald-700 hover:underline dark:text-emerald-400">
+          <Link href="/register" className="font-medium text-accent-text hover:underline">
             Create an account
           </Link>
         </>

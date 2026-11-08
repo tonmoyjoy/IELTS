@@ -12,6 +12,7 @@
 | Score forgery | Answers graded on the server against server-only keys; client scores ignored | `server/practice/grading.ts` |
 | AI prompt injection | System instruction separated from candidate text; tagged data blocks; schema-validated output; overall band derived on the server | `server/ai/*` |
 | AI cost abuse | Recording length measured on the server; size limits; atomic daily quotas per plan; refunds only on provider failure | `app/api/speaking`, `server/billing/quota.ts` |
+| Payment fraud | Prices set on the server; success only after SSLCommerz validation API confirms `tran_id`, amount and currency; idempotent claim so redirect + IPN grant Pro once; mismatches and high-risk payments held for review; callbacks rate-limited | `server/billing/payments.ts`, `server/billing/callbacks.ts` |
 | Open redirect | `from` parameter restricted to same-site relative paths | `lib/text.ts` |
 | Secret leakage | Provider errors mapped to generic messages; health check reveals no configuration | `server/ai/errors.ts`, `app/api/health` |
 | Misconfiguration | Production refuses to run without required secrets (32+ char JWT secret, DB, email, app URL) | `server/env.ts` |

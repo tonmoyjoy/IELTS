@@ -56,6 +56,12 @@ const envSchema = z
     EMAIL_FROM: optionalString,
 
     SENTRY_DSN: optionalString,
+
+    SSLCOMMERZ_STORE_ID: optionalString,
+    SSLCOMMERZ_STORE_PASSWORD: optionalString,
+    SSLCOMMERZ_MODE: z.enum(["sandbox", "live"]).default("sandbox"),
+    /** Test-only override of the gateway host. */
+    SSLCOMMERZ_BASE_URL: optionalString,
   })
   .superRefine((env, ctx) => {
     if (env.NODE_ENV !== "production") return;
@@ -78,6 +84,9 @@ const envSchema = z
     }
     if (transport === "resend" && (!env.RESEND_API_KEY || !env.EMAIL_FROM)) {
       require("RESEND_API_KEY", "RESEND_API_KEY and EMAIL_FROM are required when EMAIL_TRANSPORT=resend");
+    }
+    if (env.SSLCOMMERZ_MODE === "live" && (!env.SSLCOMMERZ_STORE_ID || !env.SSLCOMMERZ_STORE_PASSWORD)) {
+      require("SSLCOMMERZ_STORE_ID", "SSLCOMMERZ_STORE_ID and SSLCOMMERZ_STORE_PASSWORD are required when SSLCOMMERZ_MODE=live");
     }
     if (env.RATE_LIMIT_STORE === "upstash" && (!env.UPSTASH_REDIS_REST_URL || !env.UPSTASH_REDIS_REST_TOKEN)) {
       require("UPSTASH_REDIS_REST_URL", "UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN are required");

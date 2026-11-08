@@ -50,18 +50,18 @@ export function ListeningPlayer({ src }: { src: string }) {
   const progress = duration > 0 ? Math.min(100, (position / duration) * 100) : 0;
 
   return (
-    <div className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
+    <div className="rounded-xl border border-line bg-surface p-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-sm font-semibold">Recording</p>
-          <p className="text-xs text-zinc-500">
+          <p className="text-xs text-ink-faint">
             {mode === "exam" ? "Exam mode: plays once, like the real test." : "Practice mode: pause and replay freely."}
           </p>
         </div>
         <label className="flex items-center gap-2 text-sm">
           <input
             type="checkbox"
-            className="accent-emerald-600"
+            className=""
             checked={mode === "practice"}
             disabled={state === "playing" && mode === "exam"}
             onChange={(e) => setMode(e.target.checked ? "practice" : "exam")}
@@ -74,20 +74,20 @@ export function ListeningPlayer({ src }: { src: string }) {
 
       {mode === "exam" && (
         <div className="mt-4">
-          <div className="h-2 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress)} aria-label="Playback progress">
-            <div className="h-full bg-emerald-600 transition-[width]" style={{ width: `${progress}%` }} />
+          <div className="h-2 overflow-hidden rounded-full bg-sunken" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress)} aria-label="Playback progress">
+            <div className="h-full bg-accent-btn transition-[width]" style={{ width: `${progress}%` }} />
           </div>
           <div className="mt-3 flex items-center justify-between">
             <Button onClick={playOnce} disabled={state !== "ready"}>
               {state === "ready" ? "Play recording" : state === "playing" ? "Playing…" : "Recording finished"}
             </Button>
-            <span className="text-sm tabular-nums text-zinc-500">
+            <span className="text-sm tabular-nums text-ink-faint">
               {formatDuration(position)} / {formatDuration(duration)}
             </span>
           </div>
         </div>
       )}
-      {error && <p className="mt-2 text-sm text-rose-600">{error}</p>}
+      {error && <p className="mt-2 text-sm text-bad">{error}</p>}
     </div>
   );
 }

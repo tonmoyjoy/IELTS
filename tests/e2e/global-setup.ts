@@ -7,7 +7,7 @@ export default async function globalSetup() {
   const uri = process.env.E2E_MONGODB_URI ?? "mongodb://127.0.0.1:27017/ielts_e2e";
   await mongoose.connect(uri, { serverSelectionTimeoutMS: 10_000 });
   const db = mongoose.connection.db!;
-  for (const name of ["users", "practiceattempts", "usages"]) {
+  for (const name of ["users", "practiceattempts", "usages", "payments"]) {
     await db.collection(name).deleteMany({});
   }
   await db.collection("users").insertOne({

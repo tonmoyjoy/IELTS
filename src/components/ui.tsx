@@ -1,19 +1,18 @@
 import Link from "next/link";
 import type { ComponentProps, ReactNode } from "react";
+import { formatBand } from "@/lib/bands";
 
 type Variant = "primary" | "secondary" | "ghost" | "danger";
 
 const VARIANTS: Record<Variant, string> = {
-  primary:
-    "bg-emerald-600 text-white hover:bg-emerald-500 disabled:bg-emerald-600/60 dark:bg-emerald-500 dark:text-zinc-950 dark:hover:bg-emerald-400",
-  secondary:
-    "border border-zinc-300 bg-white text-zinc-800 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800",
-  ghost: "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-white",
-  danger: "bg-rose-600 text-white hover:bg-rose-500",
+  primary: "bg-accent-btn text-on-accent shadow-soft hover:bg-accent-btn-hover",
+  secondary: "border border-line-strong bg-surface text-ink hover:bg-sunken",
+  ghost: "text-ink-soft hover:bg-sunken hover:text-ink",
+  danger: "bg-bad text-on-accent hover:opacity-90",
 };
 
 const BASE =
-  "inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60";
+  "inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50";
 
 export function buttonClass(variant: Variant = "primary", extra = "") {
   return `${BASE} ${VARIANTS[variant]} ${extra}`.trim();
@@ -37,29 +36,28 @@ export function ButtonLink({
 }
 
 export function Card({ className = "", ...props }: ComponentProps<"div">) {
-  return (
-    <div
-      className={`rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900 ${className}`}
-      {...props}
-    />
-  );
+  return <div className={`rounded-2xl border border-line bg-surface shadow-soft ${className}`} {...props} />;
 }
 
 type Tone = "info" | "success" | "warning" | "error";
 
 const TONES: Record<Tone, string> = {
-  info: "border-sky-200 bg-sky-50 text-sky-900 dark:border-sky-900 dark:bg-sky-950/40 dark:text-sky-100",
-  success: "border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-100",
-  warning: "border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-100",
-  error: "border-rose-200 bg-rose-50 text-rose-900 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-100",
+  info: "border-info/30 bg-info-soft text-info",
+  success: "border-good/30 bg-good-soft text-good",
+  warning: "border-warn/30 bg-warn-soft text-warn",
+  error: "border-bad/30 bg-bad-soft text-bad",
 };
 
 export function Alert({ tone = "info", children, className = "" }: { tone?: Tone; children: ReactNode; className?: string }) {
   return (
-    <div role={tone === "error" ? "alert" : "status"} className={`rounded-lg border px-3 py-2 text-sm ${TONES[tone]} ${className}`}>
+    <div role={tone === "error" ? "alert" : "status"} className={`rounded-xl border px-4 py-3 text-sm leading-6 ${TONES[tone]} ${className}`}>
       {children}
     </div>
   );
+}
+
+export function Eyebrow({ children }: { children: ReactNode }) {
+  return <p className="text-xs font-semibold uppercase tracking-[0.14em] text-accent-text">{children}</p>;
 }
 
 export function PageHeader({
@@ -76,11 +74,9 @@ export function PageHeader({
   return (
     <div className="flex flex-wrap items-end justify-between gap-4">
       <div className="max-w-2xl">
-        {eyebrow && (
-          <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">{eyebrow}</p>
-        )}
-        <h1 className="mt-1 text-2xl font-semibold tracking-tight text-zinc-950 dark:text-white sm:text-3xl">{title}</h1>
-        {description && <p className="mt-2 text-sm leading-6 text-zinc-600 dark:text-zinc-400">{description}</p>}
+        {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
+        <h1 className="mt-1.5 font-serif text-3xl font-semibold tracking-tight text-ink sm:text-4xl">{title}</h1>
+        {description && <p className="mt-2.5 text-[15px] leading-7 text-ink-soft">{description}</p>}
       </div>
       {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
     </div>
@@ -88,26 +84,54 @@ export function PageHeader({
 }
 
 export function BandBadge({ score, size = "md" }: { score: number | null; size?: "sm" | "md" | "lg" }) {
-  const text = score == null ? "–" : Number.isInteger(score) ? `${score}.0` : String(score);
-  const sizes = { sm: "px-2 py-0.5 text-xs", md: "px-2.5 py-1 text-sm", lg: "px-3 py-1.5 text-lg" };
+  const sizes = { sm: "px-2 py-0.5 text-xs", md: "px-2.5 py-1 text-sm", lg: "px-3.5 py-1.5 text-lg" };
   return (
-    <span
-      className={`inline-flex items-center rounded-md bg-emerald-50 font-semibold tabular-nums text-emerald-800 ring-1 ring-inset ring-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-200 dark:ring-emerald-900 ${sizes[size]}`}
-    >
-      Band {text}
+    <span className={`inline-flex items-center rounded-full bg-accent-soft font-semibold tabular-nums text-accent-text ${sizes[size]}`}>
+      Band {formatBand(score)}
     </span>
   );
 }
 
 export function EmptyState({ title, description, action }: { title: string; description?: string; action?: ReactNode }) {
   return (
-    <div className="rounded-xl border border-dashed border-zinc-300 px-6 py-10 text-center dark:border-zinc-700">
-      <p className="font-medium text-zinc-900 dark:text-zinc-100">{title}</p>
-      {description && <p className="mx-auto mt-1 max-w-md text-sm text-zinc-500 dark:text-zinc-400">{description}</p>}
-      {action && <div className="mt-4">{action}</div>}
+    <div className="rounded-2xl border border-dashed border-line-strong px-6 py-12 text-center">
+      <p className="font-serif text-lg font-medium text-ink">{title}</p>
+      {description && <p className="mx-auto mt-1.5 max-w-md text-sm text-ink-soft">{description}</p>}
+      {action && <div className="mt-5">{action}</div>}
     </div>
   );
 }
 
+export function ProgressBar({ value, max = 9, label }: { value: number | null; max?: number; label?: string }) {
+  const pct = value == null ? 0 : Math.min(100, Math.max(0, (value / max) * 100));
+  return (
+    <div
+      className="h-1.5 overflow-hidden rounded-full bg-sunken"
+      role={label ? "progressbar" : undefined}
+      aria-label={label}
+      aria-valuemin={label ? 0 : undefined}
+      aria-valuemax={label ? max : undefined}
+      aria-valuenow={label && value != null ? value : undefined}
+      aria-hidden={label ? undefined : true}
+    >
+      <div className="h-full rounded-full bg-accent transition-[width] duration-500" style={{ width: `${pct}%` }} />
+    </div>
+  );
+}
+
+export function Chip({ active, className = "", ...props }: ComponentProps<typeof Link> & { active?: boolean }) {
+  return (
+    <Link
+      aria-current={active ? "true" : undefined}
+      className={`whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors ${
+        active ? "bg-accent-btn text-on-accent" : "border border-line-strong text-ink-soft hover:bg-sunken hover:text-ink"
+      } ${className}`}
+      {...props}
+    />
+  );
+}
+
 export const inputClass =
-  "mt-1 block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100";
+  "mt-1.5 block w-full rounded-xl border border-line-strong bg-raised px-3.5 py-2.5 text-[15px] text-ink placeholder:text-ink-faint focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25";
+
+export const labelClass = "text-sm font-medium text-ink";

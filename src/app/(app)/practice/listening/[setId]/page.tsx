@@ -18,7 +18,7 @@ export default async function ListeningSetPage({ params }: PageProps<"/practice/
 
   return (
     <div className="space-y-6">
-      <Link href="/practice/listening" className="text-sm text-zinc-500 hover:underline">← All listening sets</Link>
+      <Link href="/practice/listening" className="text-sm text-ink-faint hover:underline">← All listening sets</Link>
       <PageHeader
         eyebrow={`Listening · Section ${set.section}`}
         title={set.title}

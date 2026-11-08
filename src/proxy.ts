@@ -4,7 +4,7 @@ import { sessionCookieName } from "@/server/auth/cookie";
 import { buildCsp, createNonce } from "@/server/security/csp";
 
 /** Pages that require a session. Pages also check the session server-side; this only avoids a render. */
-const PROTECTED_PREFIXES = ["/dashboard", "/practice", "/history", "/account"];
+const PROTECTED_PREFIXES = ["/dashboard", "/practice", "/history", "/account", "/billing"];
 /** Pages a signed-in user has no reason to see. */
 const GUEST_ONLY = ["/login", "/register"];
 

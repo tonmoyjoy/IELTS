@@ -101,16 +101,16 @@ export function WritingEditor({ taskId, taskNumber, minutes, minWords, remaining
   return (
     <div className="space-y-4">
       <Card className="overflow-hidden">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-200 bg-zinc-50 px-4 py-2 dark:border-zinc-800 dark:bg-zinc-950">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line bg-sunken px-4 py-2">
           <div className="flex items-center gap-3 text-sm">
-            <span className={`font-semibold tabular-nums ${lowTime ? "text-rose-600" : ""}`} aria-live="off">
+            <span className={`font-semibold tabular-nums ${lowTime ? "text-bad" : ""}`} aria-live="off">
               {formatDuration(secondsLeft)}
             </span>
             <Button variant="ghost" className="px-2 py-1 text-xs" onClick={() => setTimerRunning((v) => !v)} disabled={secondsLeft === 0 || Boolean(result)}>
               {timerRunning ? "Pause timer" : secondsLeft === minutes * 60 ? "Start timer" : "Resume timer"}
             </Button>
           </div>
-          <span className={`text-sm tabular-nums ${words >= minWords ? "text-emerald-700 dark:text-emerald-400" : "text-zinc-600 dark:text-zinc-400"}`}>
+          <span className={`text-sm tabular-nums ${words >= minWords ? "text-accent-text" : "text-ink-soft"}`}>
             {words} / {minWords} words
           </span>
         </div>
@@ -122,10 +122,10 @@ export function WritingEditor({ taskId, taskNumber, minutes, minWords, remaining
           readOnly={Boolean(result)}
           spellCheck={false}
           placeholder="Start writing your answer here. The timer starts when you begin typing."
-          className="block min-h-[26rem] w-full resize-y border-0 bg-white p-4 text-[15px] leading-7 text-zinc-900 placeholder:text-zinc-400 focus:outline-none dark:bg-zinc-900 dark:text-zinc-100"
+          className="prose-reading block min-h-[28rem] w-full resize-y border-0 bg-raised px-6 py-5 text-ink placeholder:font-sans placeholder:text-sm placeholder:text-ink-faint focus:outline-none"
         />
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-zinc-200 px-4 py-3 dark:border-zinc-800">
-          <p className="text-xs text-zinc-500">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line px-4 py-3">
+          <p className="text-xs text-ink-faint">
             Spell-check is off, as in the real test. Drafts are saved on this device. {remainingEvaluations} evaluation
             {remainingEvaluations === 1 ? "" : "s"} left today.
           </p>
@@ -146,7 +146,7 @@ export function WritingEditor({ taskId, taskNumber, minutes, minWords, remaining
         <Alert tone="error">
           {error.message}
           {error.code === "QUOTA_EXCEEDED" && (
-            <> <Link href="/dashboard" className="font-medium underline">See your usage</Link></>
+            <> <Link href="/billing" className="font-medium underline">Upgrade to Pro for more</Link></>
           )}
         </Alert>
       )}
@@ -161,7 +161,7 @@ export function WritingEditor({ taskId, taskNumber, minutes, minWords, remaining
             {result.evaluation.underLength && (
               <Alert tone="warning">This answer was under {minWords} words, which lowers the {criterionOne} score.</Alert>
             )}
-            <p className="text-sm leading-6 text-zinc-700 dark:text-zinc-300">{result.evaluation.summary}</p>
+            <p className="text-sm leading-6 text-ink-soft">{result.evaluation.summary}</p>
             <CriteriaTable
               rows={[
                 { label: criterionOne, score: result.evaluation.criteria.taskResponse },
@@ -171,7 +171,7 @@ export function WritingEditor({ taskId, taskNumber, minutes, minWords, remaining
               ]}
             />
             <FeedbackLists strengths={result.evaluation.strengths} improvements={result.evaluation.improvements} />
-            <div className="flex flex-wrap gap-2 border-t border-zinc-200 pt-4 dark:border-zinc-800">
+            <div className="flex flex-wrap gap-2 border-t border-line pt-4">
               <ButtonLink href={`/history/${result.attemptId}`} variant="secondary">Open in history</ButtonLink>
               <Button
                 variant="ghost"
@@ -183,7 +183,7 @@ export function WritingEditor({ taskId, taskNumber, minutes, minWords, remaining
                 Revise and resubmit
               </Button>
             </div>
-            <p className="text-xs text-zinc-500">AI feedback is a practice estimate, not an official IELTS score.</p>
+            <p className="text-xs text-ink-faint">AI feedback is a practice estimate, not an official IELTS score.</p>
           </Card>
         </div>
       )}

@@ -65,14 +65,14 @@ export function TimedSpeaking({ set }: { set: SpeakingSet }) {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="font-semibold">Timed exam simulation</h2>
-          <p className="text-xs text-zinc-500">Part 1 (4 min) → 1 min preparation → Part 2 (2 min) → Part 3 (5 min)</p>
+          <p className="text-xs text-ink-faint">Part 1 (4 min) → 1 min preparation → Part 2 (2 min) → Part 3 (5 min)</p>
         </div>
-        <div className="rounded-lg bg-zinc-100 px-3 py-2 text-right dark:bg-zinc-950">
-          <p className="text-xs text-zinc-500">{PHASES[phase].label}</p>
+        <div className="rounded-lg bg-sunken px-3 py-2 text-right">
+          <p className="text-xs text-ink-faint">{PHASES[phase].label}</p>
           <p className="text-xl font-semibold tabular-nums" aria-live="off">{formatDuration(remaining)}</p>
         </div>
       </div>
-      <ul className="mt-4 space-y-1.5 text-sm text-zinc-700 dark:text-zinc-300">
+      <ul className="mt-4 space-y-1.5 text-sm text-ink-soft">
         {prompts.map((prompt) => <li key={prompt}>{prompt}</li>)}
       </ul>
       <div className="mt-4 flex flex-wrap gap-2">

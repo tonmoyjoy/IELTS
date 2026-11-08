@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { readSse } from "@/lib/sse";
 import { formatDuration } from "@/lib/text";
@@ -211,12 +212,12 @@ export function SpeakingRecorder({ setId, remainingEvaluations }: { setId: strin
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="font-semibold">Record your answer</h2>
-            <p className="text-xs text-zinc-500">
+            <p className="text-xs text-ink-faint">
               Answer the Part 2 cue card (1–2 minutes is ideal) or any of the questions. Between 30 seconds and 5 minutes.
             </p>
           </div>
-          <span className={`rounded-lg px-3 py-2 text-lg font-semibold tabular-nums ${status.kind === "recording" ? "bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-200" : "bg-zinc-100 dark:bg-zinc-950"}`}>
-            {status.kind === "recording" && <span className="mr-2 inline-block h-2 w-2 animate-pulse rounded-full bg-rose-600" aria-hidden />}
+          <span className={`rounded-lg px-3 py-2 text-lg font-semibold tabular-nums ${status.kind === "recording" ? "bg-bad-soft text-bad" : "bg-sunken"}`}>
+            {status.kind === "recording" && <span className="mr-2 inline-block h-2 w-2 animate-pulse rounded-full bg-bad" aria-hidden />}
             {formatDuration(seconds)}
           </span>
         </div>
@@ -240,22 +241,22 @@ export function SpeakingRecorder({ setId, remainingEvaluations }: { setId: strin
         {tooLong && <Alert tone="warning" className="mt-3">This recording is over 5 minutes. Please record a shorter answer.</Alert>}
         {status.kind === "error" && <Alert tone="error" className="mt-3">{status.message}</Alert>}
         {remainingEvaluations === 0 && status.kind !== "done" && (
-          <Alert tone="info" className="mt-3">You have used today&apos;s speaking evaluations. They reset at 00:00 UTC.</Alert>
+          <Alert tone="info" className="mt-3">You have used today&apos;s speaking evaluations. They reset at 00:00 UTC. <Link href="/billing" className="font-medium underline">Upgrade to Pro</Link> for more.</Alert>
         )}
 
         <details className="mt-4 text-sm">
-          <summary className="cursor-pointer text-zinc-600 dark:text-zinc-400">Microphone not working? Upload a recording instead</summary>
-          <label htmlFor="speaking-upload" className="mt-2 block text-xs text-zinc-500">MP3, M4A, WAV, OGG or WebM, up to 10 MB.</label>
+          <summary className="cursor-pointer text-ink-soft">Microphone not working? Upload a recording instead</summary>
+          <label htmlFor="speaking-upload" className="mt-2 block text-xs text-ink-faint">MP3, M4A, WAV, OGG or WebM, up to 10 MB.</label>
           <input
             id="speaking-upload"
             type="file"
             accept="audio/*,video/webm"
             disabled={busy || status.kind === "recording"}
             onChange={(e) => void onFile(e.target.files?.[0] ?? null)}
-            className="mt-2 block w-full text-sm file:mr-3 file:rounded-md file:border-0 file:bg-zinc-900 file:px-3 file:py-2 file:text-sm file:font-medium file:text-white dark:file:bg-zinc-100 dark:file:text-zinc-900"
+            className="mt-2 block w-full text-sm file:mr-3 file:rounded-md file:border-0 file:bg-accent-btn file:px-3 file:py-2 file:text-sm file:font-medium file:text-on-accent"
           />
         </details>
-        <p className="mt-4 text-xs text-zinc-500">
+        <p className="mt-4 text-xs text-ink-faint">
           Your recording is sent to our AI provider for assessment and is not stored by us; the transcript and feedback are saved to your history.
         </p>
       </Card>
@@ -266,7 +267,7 @@ export function SpeakingRecorder({ setId, remainingEvaluations }: { setId: strin
             <h2 className="text-lg font-semibold">Examiner feedback</h2>
             <BandBadge score={status.result.evaluation.bandScore} size="lg" />
           </div>
-          <p className="text-sm leading-6 text-zinc-700 dark:text-zinc-300">{status.result.evaluation.summary}</p>
+          <p className="text-sm leading-6 text-ink-soft">{status.result.evaluation.summary}</p>
           <CriteriaTable
             rows={[
               { label: "Fluency and Coherence", score: status.result.evaluation.criteria.fluencyCoherence },
@@ -278,12 +279,12 @@ export function SpeakingRecorder({ setId, remainingEvaluations }: { setId: strin
           <FeedbackLists strengths={status.result.evaluation.strengths} improvements={status.result.evaluation.improvements} />
           <details>
             <summary className="cursor-pointer text-sm font-medium">Transcript</summary>
-            <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-zinc-700 dark:text-zinc-300">{status.result.evaluation.transcript}</p>
+            <p className="prose-reading mt-2 whitespace-pre-wrap">{status.result.evaluation.transcript}</p>
           </details>
-          <div className="flex flex-wrap gap-2 border-t border-zinc-200 pt-4 dark:border-zinc-800">
+          <div className="flex flex-wrap gap-2 border-t border-line pt-4">
             <ButtonLink href={`/history/${status.result.attempt.id}`} variant="secondary">Open in history</ButtonLink>
           </div>
-          <p className="text-xs text-zinc-500">AI feedback is a practice estimate, not an official IELTS score.</p>
+          <p className="text-xs text-ink-faint">AI feedback is a practice estimate, not an official IELTS score.</p>
         </Card>
       )}
     </div>

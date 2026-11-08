@@ -6,13 +6,14 @@ Practice all four Academic IELTS modules with exam-style tasks, instant marking 
 - **Writing:** timed Task 1 (charts, processes) and Task 2 essays, scored on the four official criteria.
 - **Speaking:** timed Part 1–3 simulation plus recorded answers. The AI hears the audio, so pronunciation and fluency are judged from speech, not guessed from text.
 - **Progress:** dashboard with an estimated overall band, target tracking, per-module stats and full attempt history, including word-level diffs between essay revisions.
-- **Plans:** daily AI-evaluation quotas per plan (`free` / `pro`), ready for a payment provider to switch a user's plan.
+- **Payments:** prepaid Pro (৳300 / 1 month, ৳600 / 3 months, ৳1,500 / 12 months) via SSLCommerz — bKash, Nagad, Rocket and Visa/Mastercard/Amex. Confirmed server-side; buying again extends Pro.
+- **Eye-friendly design:** warm sepia light theme and night mode (WCAG AA contrast), serif reading face, adjustable text size, optional 20-20-20 eye-rest reminders.
 
 > Scores are practice estimates, not official IELTS results.
 
 ## Stack
 
-Next.js 16 (App Router) · React 19 · TypeScript (strict) · Tailwind CSS 4 · MongoDB/Mongoose · Google Gemini (`@google/genai`) · Zod · Vitest · Playwright · Sentry (optional)
+Next.js 16 (App Router) · React 19 · TypeScript (strict) · Tailwind CSS 4 · MongoDB/Mongoose · Google Gemini (`@google/genai`) · SSLCommerz · Zod · Vitest · Playwright · Sentry (optional)
 
 ## Quick start
 
@@ -57,7 +58,7 @@ src/
     auth/              JWT sessions with token-version revocation, cookies, passwords
     ai/                Gemini client, writing/speaking examiners, prompt hardening, error mapping
     audio/             Server-side recording length (incl. browser WebM with no duration)
-    billing/           Atomic daily quota reservation and refunds
+    billing/           Daily quotas, SSLCommerz client, checkout + payment confirmation
     content/           Answer keys and listening scripts (never sent before submission)
     http/              Error handling, JSON validation, CSRF origin guard, client IP
     practice/          Grading
@@ -79,7 +80,8 @@ Key design decisions:
 2. Set the production variables from `.env.example`: `MONGODB_URI`, `JWT_SECRET` (32+ chars), `APP_URL`, `RESEND_API_KEY`, `EMAIL_FROM`, `GEMINI_API_KEY`.
 3. **Serverless (Vercel):** also set `RATE_LIMIT_STORE=upstash` with Upstash credentials. **Single server / Docker:** the default in-memory limiter is correct.
 4. Behind a proxy other than Vercel, set `TRUST_PROXY_HOPS` or `CLIENT_IP_HEADER` so rate limits see real client IPs.
-5. After deploying, run `BASE_URL=https://your-domain npm run test:smoke`.
+5. For payments set `SSLCOMMERZ_STORE_ID`, `SSLCOMMERZ_STORE_PASSWORD`, `SSLCOMMERZ_MODE`, and register the IPN URL in the SSLCommerz panel.
+6. After deploying, run `BASE_URL=https://your-domain npm run test:smoke`.
 
 The app validates its configuration on the first request and fails loudly if anything required is missing.
 
@@ -87,7 +89,8 @@ The app validates its configuration on the first request and fails loudly if any
 
 - Replace the synthetic listening audio (`public/listening/*.mp3`) with human or neural-TTS recordings of the same scripts; answer keys depend only on the script text.
 - Add a privacy policy and terms (audio is sent to Google's Gemini API for assessment; on Gemini's free tier, Google may use inputs to improve its products — use a paid tier for user data).
-- Add a payment provider whose webhook sets `user.plan`; limits live in `src/lib/plans.ts`.
+- Get a live SSLCommerz merchant account, set `SSLCOMMERZ_MODE=live` and register the IPN URL (`/api/billing/sslcommerz/ipn`). Prices and limits live in `src/lib/plans.ts`.
+- Payments marked "Under review" (amount mismatch or high-risk flag) need a manual decision; see HANDOFF.md.
 - Calibrate AI scores against a sample of essays/recordings with known examiner bands, and adjust prompts (versioned in `src/server/ai/*`).
 
 ## License

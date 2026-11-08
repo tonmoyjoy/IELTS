@@ -1,8 +1,19 @@
 import type { Metadata, Viewport } from "next";
+import localFont from "next/font/local";
 import { headers } from "next/headers";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
+import { PREFERENCES_BOOT_SCRIPT } from "@/lib/preferences";
 import "./globals.css";
+
+const literata = localFont({
+  src: [
+    { path: "./fonts/Literata-Variable.woff2", style: "normal", weight: "200 900" },
+    { path: "./fonts/Literata-Variable-Italic.woff2", style: "italic", weight: "200 900" },
+  ],
+  variable: "--font-literata",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: { default: "IELTS Practice Studio", template: "%s · IELTS Practice Studio" },
@@ -12,20 +23,27 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#09090b" },
+    { media: "(prefers-color-scheme: light)", color: "#f4ecd8" },
+    { media: "(prefers-color-scheme: dark)", color: "#1b1712" },
   ],
 };
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  // Reading request headers renders every page per request, which the CSP nonce set in proxy.ts requires.
-  await headers();
+  // The CSP nonce comes from proxy.ts; reading headers also renders every page per request, which nonces require.
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
   return (
-    <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`}>
-      <body className="min-h-screen bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`${GeistSans.variable} ${GeistMono.variable} ${literata.variable}`}
+    >
+      <head>
+        <script nonce={nonce} dangerouslySetInnerHTML={{ __html: PREFERENCES_BOOT_SCRIPT }} />
+      </head>
+      <body className="min-h-screen bg-paper text-ink">
         <a
           href="#main"
-          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-white focus:px-3 focus:py-2 focus:text-sm focus:shadow dark:focus:bg-zinc-900"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-surface focus:px-3 focus:py-2 focus:text-sm focus:shadow-lift"
         >
           Skip to content
         </a>

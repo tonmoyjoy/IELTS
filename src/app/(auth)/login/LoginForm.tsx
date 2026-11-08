@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/api-client";
-import { Alert, Button, inputClass } from "@/components/ui";
+import { Alert, Button, inputClass, labelClass } from "@/components/ui";
 import { ResendVerification } from "@/components/auth/ResendVerification";
 
 export function LoginForm({ redirectTo }: { redirectTo: string }) {
@@ -31,14 +31,14 @@ export function LoginForm({ redirectTo }: { redirectTo: string }) {
   return (
     <form onSubmit={onSubmit} className="space-y-4" noValidate>
       <div>
-        <label htmlFor="email" className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Email</label>
+        <label htmlFor="email" className={labelClass}>Email</label>
         <input id="email" name="email" type="email" autoComplete="email" required value={email}
           onChange={(e) => setEmail(e.target.value)} className={inputClass} />
       </div>
       <div>
         <div className="flex items-center justify-between">
-          <label htmlFor="password" className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Password</label>
-          <Link href="/forgot-password" className="text-xs font-medium text-emerald-700 hover:underline dark:text-emerald-400">
+          <label htmlFor="password" className={labelClass}>Password</label>
+          <Link href="/forgot-password" className="text-xs font-medium text-accent-text hover:underline">
             Forgot password?
           </Link>
         </div>

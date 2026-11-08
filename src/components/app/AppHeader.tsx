@@ -1,23 +1,33 @@
 import Link from "next/link";
 import { NavLinks } from "@/components/app/NavLinks";
 import { SignOutButton } from "@/components/app/SignOutButton";
-import { getPlan, type PlanId } from "@/lib/plans";
+import { ComfortMenu } from "@/components/app/ComfortMenu";
+import { Logo } from "@/components/app/Logo";
+import type { PlanId } from "@/lib/plans";
 
-export function AppHeader({ email, plan }: { email: string; plan: PlanId }) {
+export function AppHeader({ email, plan, planExpiresAt }: { email: string; plan: PlanId; planExpiresAt: string | null }) {
+  const until = planExpiresAt
+    ? new Date(planExpiresAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" })
+    : null;
   return (
-    <header className="sticky top-0 z-30 border-b border-zinc-200 bg-white/90 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/90">
+    <header className="sticky top-0 z-30 border-b border-line bg-paper/90 backdrop-blur-md">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-6 gap-y-2 px-4 py-3">
-        <Link href="/dashboard" className="font-semibold tracking-tight text-emerald-700 dark:text-emerald-400">
-          IELTS Practice Studio
+        <Link href="/dashboard" aria-label="IELTS Practice Studio home">
+          <Logo />
         </Link>
         <NavLinks />
-        <div className="flex items-center gap-3 text-sm">
-          <span className="hidden max-w-[16rem] truncate text-zinc-500 md:inline" title={email}>
-            {email}
-          </span>
-          <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
-            {getPlan(plan).name}
-          </span>
+        <div className="flex items-center gap-1.5 text-sm">
+          <Link
+            href="/billing"
+            title={plan === "pro" ? (until ? `Pro until ${until}` : "Pro") : "Upgrade to Pro"}
+            className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
+              plan === "pro" ? "bg-accent-soft text-accent-text" : "border border-accent/50 text-accent-text hover:bg-accent-soft"
+            }`}
+          >
+            {plan === "pro" ? (until ? `Pro · until ${until}` : "Pro") : "Upgrade"}
+          </Link>
+          <ComfortMenu />
+          <span className="sr-only">Signed in as {email}</span>
           <SignOutButton />
         </div>
       </div>

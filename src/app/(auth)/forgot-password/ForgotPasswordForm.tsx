@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { apiFetch } from "@/lib/api-client";
-import { Alert, Button, inputClass } from "@/components/ui";
+import { Alert, Button, inputClass, labelClass } from "@/components/ui";
 
 export function ForgotPasswordForm() {
   const [email, setEmail] = useState("");
@@ -21,7 +21,7 @@ export function ForgotPasswordForm() {
   return (
     <form onSubmit={onSubmit} className="space-y-4" noValidate>
       <div>
-        <label htmlFor="email" className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Email</label>
+        <label htmlFor="email" className={labelClass}>Email</label>
         <input id="email" type="email" autoComplete="email" required value={email}
           onChange={(e) => setEmail(e.target.value)} className={inputClass} />
       </div>

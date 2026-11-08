@@ -36,24 +36,24 @@ function ObjectiveResults({ attempt }: { attempt: AttemptDetail }) {
         <h2 className="font-semibold">Answers</h2>
         {set && <ButtonLink href={practiceHref} variant="secondary">Try this set again</ButtonLink>}
       </div>
-      <ol className="mt-4 divide-y divide-zinc-100 dark:divide-zinc-800">
+      <ol className="mt-4 divide-y divide-line">
         {results.map((result) => (
           <li key={result.id} className="py-3 text-sm">
             <div className="flex items-start justify-between gap-3">
               <p className="font-medium">
-                <span className="mr-2 tabular-nums text-zinc-500">{result.number}.</span>
+                <span className="mr-2 tabular-nums text-ink-faint">{result.number}.</span>
                 {prompts.get(result.id) ?? result.id}
               </p>
-              <span className={`shrink-0 rounded px-2 py-0.5 text-xs font-semibold ${result.correct ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200" : "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-200"}`}>
+              <span className={`shrink-0 rounded px-2 py-0.5 text-xs font-semibold ${result.correct ? "bg-good-soft text-accent-text" : "bg-bad-soft text-bad"}`}>
                 {result.correct ? "Correct" : "Incorrect"}
               </span>
             </div>
-            <p className="mt-1 text-zinc-600 dark:text-zinc-400">
-              Your answer: <span className="font-medium text-zinc-900 dark:text-zinc-100">{result.given || "—"}</span>
-              {!result.correct && <> · Correct: <span className="font-medium text-zinc-900 dark:text-zinc-100">{result.expected}</span></>}
+            <p className="mt-1 text-ink-soft">
+              Your answer: <span className="font-medium text-ink">{result.given || "—"}</span>
+              {!result.correct && <> · Correct: <span className="font-medium text-ink">{result.expected}</span></>}
               {result.overWordLimit && " · over the word limit"}
             </p>
-            <p className="mt-0.5 text-xs text-zinc-500">{result.explanation}</p>
+            <p className="mt-0.5 text-xs text-ink-faint">{result.explanation}</p>
           </li>
         ))}
       </ol>
@@ -74,7 +74,7 @@ async function WritingResult({ attempt, userId, compareId }: { attempt: AttemptD
   return (
     <div className="space-y-6">
       <Card className="space-y-5 p-6">
-        {attempt.summary && <p className="text-sm leading-6 text-zinc-700 dark:text-zinc-300">{attempt.summary}</p>}
+        {attempt.summary && <p className="text-sm leading-6 text-ink-soft">{attempt.summary}</p>}
         <CriteriaTable
           rows={[
             { label: isTask1 ? "Task Achievement" : "Task Response", score: criteria.taskResponse ?? 0 },
@@ -90,26 +90,26 @@ async function WritingResult({ attempt, userId, compareId }: { attempt: AttemptD
       <Card className="p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="font-semibold">{compareAnswer ? "Changes from your earlier attempt" : "Your answer"}</h2>
-          {typeof attempt.details.wordCount === "number" && <span className="text-xs text-zinc-500">{attempt.details.wordCount} words</span>}
+          {typeof attempt.details.wordCount === "number" && <span className="text-xs text-ink-faint">{attempt.details.wordCount} words</span>}
         </div>
         {compareAnswer ? (
           <div className="mt-3"><WritingDiff before={compareAnswer} after={answer} /></div>
         ) : (
-          <p className="mt-3 whitespace-pre-wrap text-[15px] leading-7">{answer}</p>
+          <p className="prose-reading mt-3 whitespace-pre-wrap">{answer}</p>
         )}
         {siblings.length > 0 && (
-          <div className="mt-6 border-t border-zinc-200 pt-4 dark:border-zinc-800">
+          <div className="mt-6 border-t border-line pt-4">
             <p className="text-sm font-medium">Compare with another attempt at this task</p>
             <ul className="mt-2 flex flex-wrap gap-2">
               {compareAnswer && (
-                <li><Link href={`/history/${attempt.id}`} className="rounded-md border border-zinc-300 px-2.5 py-1 text-xs hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-800">Hide comparison</Link></li>
+                <li><Link href={`/history/${attempt.id}`} className="rounded-md border border-line-strong px-2.5 py-1 text-xs hover:bg-sunken">Hide comparison</Link></li>
               )}
               {siblings.map((sibling) => (
                 <li key={sibling.id}>
                   <Link
                     href={`/history/${attempt.id}?compare=${sibling.id}`}
                     aria-current={sibling.id === compareId ? "true" : undefined}
-                    className={`rounded-md border px-2.5 py-1 text-xs ${sibling.id === compareId ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40" : "border-zinc-300 hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-800"}`}
+                    className={`rounded-md border px-2.5 py-1 text-xs ${sibling.id === compareId ? "border-accent bg-accent-soft" : "border-line-strong hover:bg-sunken"}`}
                   >
                     {new Date(sibling.date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })} · Band {sibling.score}
                   </Link>
@@ -129,7 +129,7 @@ function SpeakingResult({ attempt }: { attempt: AttemptDetail }) {
   return (
     <div className="space-y-6">
       <Card className="space-y-5 p-6">
-        {attempt.summary && <p className="text-sm leading-6 text-zinc-700 dark:text-zinc-300">{attempt.summary}</p>}
+        {attempt.summary && <p className="text-sm leading-6 text-ink-soft">{attempt.summary}</p>}
         <CriteriaTable
           rows={[
             { label: "Fluency and Coherence", score: criteria.fluencyCoherence ?? 0 },
@@ -144,10 +144,10 @@ function SpeakingResult({ attempt }: { attempt: AttemptDetail }) {
         <div className="flex items-center justify-between">
           <h2 className="font-semibold">Transcript</h2>
           {typeof attempt.details.durationSeconds === "number" && (
-            <span className="text-xs text-zinc-500">{attempt.details.durationSeconds} seconds</span>
+            <span className="text-xs text-ink-faint">{attempt.details.durationSeconds} seconds</span>
           )}
         </div>
-        <p className="mt-3 whitespace-pre-wrap text-[15px] leading-7">{transcript}</p>
+        <p className="prose-reading mt-3 whitespace-pre-wrap">{transcript}</p>
       </Card>
     </div>
   );
@@ -163,7 +163,7 @@ export default async function AttemptPage({ params, searchParams }: PageProps<"/
 
   return (
     <div className="space-y-6">
-      <Link href={`/history?module=${attempt.module}`} className="text-sm text-zinc-500 hover:underline">
+      <Link href={`/history?module=${attempt.module}`} className="text-sm text-ink-faint hover:underline">
         ← {MODULE_LABELS[attempt.module]} history
       </Link>
       <PageHeader

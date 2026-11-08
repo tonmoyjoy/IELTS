@@ -34,7 +34,7 @@ export default async function HistoryPage({ searchParams }: PageProps<"/history"
               href={filterHref(module)}
               aria-current={active ? "true" : undefined}
               className={`rounded-full px-3 py-1.5 text-sm font-medium ${
-                active ? "bg-emerald-600 text-white" : "border border-zinc-300 text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                active ? "bg-accent-btn text-on-accent" : "border border-line-strong text-ink-soft hover:bg-sunken"
               }`}
             >
               {module ? MODULE_LABELS[module] : "All"}
@@ -51,13 +51,13 @@ export default async function HistoryPage({ searchParams }: PageProps<"/history"
         />
       ) : (
         <Card>
-          <ul className="divide-y divide-zinc-100 dark:divide-zinc-800">
+          <ul className="divide-y divide-line">
             {attempts.map((attempt) => (
               <li key={attempt.id}>
-                <Link href={`/history/${attempt.id}`} className="flex flex-wrap items-center justify-between gap-3 px-5 py-4 hover:bg-zinc-50 dark:hover:bg-zinc-800/40">
+                <Link href={`/history/${attempt.id}`} className="flex flex-wrap items-center justify-between gap-3 px-5 py-4 hover:bg-sunken">
                   <div className="min-w-0">
-                    <p className="truncate font-medium text-zinc-900 dark:text-zinc-100">{attempt.title}</p>
-                    <p className="mt-0.5 text-xs text-zinc-500">
+                    <p className="truncate font-medium text-ink">{attempt.title}</p>
+                    <p className="mt-0.5 text-xs text-ink-faint">
                       {MODULE_LABELS[attempt.module]} ·{" "}
                       {new Date(attempt.date).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })}
                       {attempt.summary && attempt.totalQuestions ? ` · ${attempt.summary}` : ""}

@@ -21,19 +21,19 @@ export function TargetBandForm({ initial }: { initial: number }) {
 
   return (
     <div className="mt-4 flex items-center gap-2 text-sm">
-      <label htmlFor="target-band" className="text-zinc-600 dark:text-zinc-400">Change target</label>
+      <label htmlFor="target-band" className="text-ink-soft">Change target</label>
       <select
         id="target-band"
         value={value}
         disabled={status === "saving"}
         onChange={(e) => void update(Number(e.target.value))}
-        className="rounded-md border border-zinc-300 bg-white px-2 py-1 text-sm dark:border-zinc-700 dark:bg-zinc-950"
+        className="rounded-md border border-line-strong bg-surface px-2 py-1 text-sm"
       >
         {OPTIONS.map((option) => (
           <option key={option} value={option}>{option.toFixed(1)}</option>
         ))}
       </select>
-      {status === "error" && <span className="text-xs text-rose-600">Could not save</span>}
+      {status === "error" && <span className="text-xs text-bad">Could not save</span>}
     </div>
   );
 }

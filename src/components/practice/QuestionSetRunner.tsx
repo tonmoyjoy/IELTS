@@ -68,7 +68,7 @@ function PromptWithBlank({ prompt }: { prompt: string }) {
       {parts.map((part, index) => (
         <span key={index}>
           {part}
-          {index < parts.length - 1 && <span className="mx-1 inline-block min-w-10 border-b-2 border-zinc-400 align-baseline" aria-hidden />}
+          {index < parts.length - 1 && <span className="mx-1 inline-block min-w-10 border-b-2 border-ink-faint align-baseline" aria-hidden />}
         </span>
       ))}
     </>
@@ -95,8 +95,8 @@ function QuestionInput({
             key={option.value}
             className={`flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm transition-colors ${
               value === option.value
-                ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40"
-                : "border-zinc-200 hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-800/50"
+                ? "border-accent bg-accent-soft"
+                : "border-line hover:bg-sunken"
             }`}
           >
             <input
@@ -105,7 +105,7 @@ function QuestionInput({
               value={option.value}
               checked={value === option.value}
               onChange={() => onChange(option.value)}
-              className="accent-emerald-600"
+              className=""
             />
             <span>{option.label}</span>
           </label>
@@ -186,19 +186,19 @@ export function QuestionSetRunner({ module, setId, groups, aside, layout }: Prop
         <Card className="p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-sm text-zinc-600 dark:text-zinc-400">Your score</p>
+              <p className="text-sm text-ink-soft">Your score</p>
               <p className="text-3xl font-semibold tabular-nums">
                 {result.grade.rawScore} / {result.grade.totalQuestions}
               </p>
             </div>
             <BandBadge score={result.grade.band} size="lg" />
           </div>
-          <p className="mt-3 text-xs text-zinc-500">
+          <p className="mt-3 text-xs text-ink-faint">
             Estimated band: your raw score is scaled to the 40-question IELTS conversion table.
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
             <Button variant="secondary" onClick={reset}>Try again</Button>
-            <Link href={`/history/${result.attempt.id}`} className="inline-flex items-center px-2 text-sm font-medium text-emerald-700 hover:underline dark:text-emerald-400">
+            <Link href={`/history/${result.attempt.id}`} className="inline-flex items-center px-2 text-sm font-medium text-accent-text hover:underline">
               Saved to history
             </Link>
           </div>
@@ -207,20 +207,20 @@ export function QuestionSetRunner({ module, setId, groups, aside, layout }: Prop
 
       {groups.map((group) => (
         <section key={group.range} aria-label={group.range}>
-          <h3 className="text-sm font-semibold text-zinc-950 dark:text-white">{group.range}</h3>
-          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{group.instructions}</p>
+          <h3 className="text-sm font-semibold text-ink">{group.range}</h3>
+          <p className="mt-1 text-sm text-ink-soft">{group.instructions}</p>
           <ol className="mt-4 space-y-5">
             {group.questions.map((question) => {
               const graded = resultById.get(question.id);
               return (
                 <li key={question.id} className="text-sm">
-                  <p id={`${question.id}-label`} className="font-medium text-zinc-900 dark:text-zinc-100">
-                    <span className="mr-2 tabular-nums text-zinc-500">{question.number}.</span>
+                  <p id={`${question.id}-label`} className="font-medium text-ink">
+                    <span className="mr-2 tabular-nums text-ink-faint">{question.number}.</span>
                     <PromptWithBlank prompt={question.prompt} />
                   </p>
                   <QuestionInput question={question} value={answers[question.id] ?? ""} onChange={(v) => update(question.id, v)} disabled={Boolean(result)} />
                   {graded && (
-                    <div className={`mt-2 rounded-md px-3 py-2 text-xs ${graded.correct ? "bg-emerald-50 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-100" : "bg-rose-50 text-rose-900 dark:bg-rose-950/40 dark:text-rose-100"}`}>
+                    <div className={`mt-2 rounded-md px-3 py-2 text-xs ${graded.correct ? "bg-accent-soft text-good" : "bg-bad-soft text-bad"}`}>
                       <p className="font-semibold">
                         {graded.correct ? "Correct" : `Incorrect${graded.given ? "" : " (no answer)"} — answer: ${graded.expected}`}
                         {graded.overWordLimit ? " · over the word limit" : ""}
@@ -250,8 +250,8 @@ export function QuestionSetRunner({ module, setId, groups, aside, layout }: Prop
         </Alert>
       )}
       {!result && (
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-zinc-200 pt-4 dark:border-zinc-800">
-          <p className="text-sm text-zinc-500">{answered} of {questions.length} answered · drafts are saved on this device</p>
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4">
+          <p className="text-sm text-ink-faint">{answered} of {questions.length} answered · drafts are saved on this device</p>
           <Button onClick={() => void submit()} disabled={pending}>{pending ? "Marking…" : "Submit answers"}</Button>
         </div>
       )}
@@ -259,10 +259,10 @@ export function QuestionSetRunner({ module, setId, groups, aside, layout }: Prop
       {result?.transcript && result.transcript.length > 0 && (
         <Card className="p-5">
           <h3 className="font-semibold">Transcript</h3>
-          <div className="mt-3 space-y-2 text-sm leading-6 text-zinc-700 dark:text-zinc-300">
+          <div className="prose-reading mt-3 space-y-3">
             {result.transcript.map((line, index) => (
               <p key={index}>
-                <span className="mr-2 font-semibold text-zinc-500">{line.speaker}:</span>
+                <span className="mr-2 font-semibold text-ink-faint">{line.speaker}:</span>
                 {line.text}
               </p>
             ))}

@@ -12,18 +12,18 @@ export function WritingDiff({ before, after }: { before: string; after: string }
 
   return (
     <div>
-      <p className="text-xs text-zinc-500">
-        <span className="font-medium text-emerald-700 dark:text-emerald-400">+{added} words</span> ·{" "}
-        <span className="font-medium text-rose-700 dark:text-rose-400">−{removed} words</span> compared with the earlier attempt
+      <p className="text-xs text-ink-faint">
+        <span className="font-medium text-accent-text">+{added} words</span> ·{" "}
+        <span className="font-medium text-bad">−{removed} words</span> compared with the earlier attempt
       </p>
-      <p className="mt-3 whitespace-pre-wrap text-[15px] leading-7">
+      <p className="prose-reading mt-3 whitespace-pre-wrap">
         {parts.map((part, index) =>
           part.added ? (
-            <ins key={index} className="rounded bg-emerald-100 px-0.5 text-emerald-900 no-underline dark:bg-emerald-900/50 dark:text-emerald-100">
+            <ins key={index} className="rounded bg-good-soft px-0.5 text-good no-underline">
               {part.value}
             </ins>
           ) : part.removed ? (
-            <del key={index} className="rounded bg-rose-100 px-0.5 text-rose-900 dark:bg-rose-900/50 dark:text-rose-100">
+            <del key={index} className="rounded bg-bad-soft px-0.5 text-bad">
               {part.value}
             </del>
           ) : (
