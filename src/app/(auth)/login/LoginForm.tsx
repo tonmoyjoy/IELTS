@@ -29,7 +29,7 @@ export function LoginForm({ redirectTo }: { redirectTo: string }) {
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4" noValidate>
+    <form method="post" onSubmit={onSubmit} className="space-y-4" noValidate>
       <div>
         <label htmlFor="email" className={labelClass}>Email</label>
         <input id="email" name="email" type="email" autoComplete="email" required value={email}

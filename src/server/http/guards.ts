@@ -28,10 +28,20 @@ export function getAllowedOrigins(): Set<string> {
   return origins;
 }
 
-function isLocalDevOrigin(origin: string) {
+/**
+ * Development only: the machine itself and other devices on the local
+ * network (phones on the same Wi-Fi opening the dev server's "Network" URL).
+ */
+export function isLocalDevOrigin(origin: string) {
   try {
     const url = new URL(origin);
-    return url.protocol === "http:" && ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname);
+    if (url.protocol !== "http:" && url.protocol !== "https:") return false;
+    const host = url.hostname;
+    if (["localhost", "127.0.0.1", "[::1]"].includes(host) || host.endsWith(".local")) return true;
+    const parts = host.split(".").map(Number);
+    if (parts.length !== 4 || parts.some((n) => !Number.isInteger(n) || n < 0 || n > 255)) return false;
+    const [a, b] = parts;
+    return a === 10 || (a === 192 && b === 168) || (a === 172 && b >= 16 && b <= 31);
   } catch {
     return false;
   }

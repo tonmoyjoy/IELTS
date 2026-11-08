@@ -6,7 +6,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const user = await requirePageUser("/dashboard");
   return (
     <div className="min-h-screen">
-      <AppHeader email={user.email} plan={user.plan} planExpiresAt={user.planExpiresAt} />
+      <AppHeader email={user.email} plan={user.plan} planExpiresAt={user.planExpiresAt} isAdmin={user.isAdmin} />
       <main id="main" className="mx-auto max-w-6xl px-4 py-10">
         {children}
       </main>

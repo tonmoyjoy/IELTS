@@ -74,3 +74,17 @@ test.describe("signed out", () => {
     expect(res.status()).toBe(403);
   });
 });
+
+test.describe("without JavaScript", () => {
+  test.use({ javaScriptEnabled: false });
+
+  test("a sign-in attempt never puts the password in the URL", async ({ page }) => {
+    await page.goto("/login");
+    await page.getByLabel("Email").fill("someone@example.com");
+    await page.getByLabel("Password").fill("secret password 123");
+    await page.getByRole("button", { name: "Sign in" }).click();
+    await page.waitForLoadState();
+    expect(page.url()).not.toContain("password");
+    expect(page.url()).not.toContain("secret");
+  });
+});

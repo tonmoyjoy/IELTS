@@ -3,12 +3,17 @@ import Link from "next/link";
 import { AuthCard } from "@/components/auth/AuthCard";
 import { LoginForm } from "./LoginForm";
 import { safeRedirectPath } from "@/lib/text";
+import { Alert } from "@/components/ui";
+import { GOOGLE_ERRORS, GoogleButton } from "@/components/auth/GoogleButton";
+import { isGoogleConfigured } from "@/server/auth/google";
 
 export const metadata: Metadata = { title: "Sign in" };
 
 export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   const params = await searchParams;
   const from = typeof params.from === "string" ? params.from : undefined;
+  const error = typeof params.error === "string" ? GOOGLE_ERRORS[params.error] : undefined;
+  const redirectTo = safeRedirectPath(from);
   return (
     <AuthCard
       title="Welcome back"
@@ -22,7 +27,11 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
         </>
       }
     >
-      <LoginForm redirectTo={safeRedirectPath(from)} />
+      <div className="space-y-5">
+        {error && <Alert tone="error">{error}</Alert>}
+        {isGoogleConfigured() && <GoogleButton from={redirectTo} />}
+        <LoginForm redirectTo={redirectTo} />
+      </div>
     </AuthCard>
   );
 }

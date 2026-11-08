@@ -9,6 +9,13 @@ import { verifySessionToken } from "@/server/auth/jwt";
 import { sessionCookieName } from "@/server/auth/cookie";
 import { ApiError } from "@/server/http/api";
 import { effectivePlan, type PlanId } from "@/lib/plans";
+import { getEnv } from "@/server/env";
+import { notFound } from "next/navigation";
+
+export function isAdminEmail(email: string): boolean {
+  const admins = getEnv().ADMIN_EMAILS.map((value) => value.toLowerCase());
+  return admins.includes(email.toLowerCase());
+}
 
 export type SessionUser = {
   id: string;
@@ -17,6 +24,8 @@ export type SessionUser = {
   plan: PlanId;
   /** ISO date the paid plan ends, if any. */
   planExpiresAt: string | null;
+  /** Listed in ADMIN_EMAILS. */
+  isAdmin: boolean;
   targetBand: number;
 };
 
@@ -46,6 +55,7 @@ export const getSessionUser = cache(async (): Promise<SessionUser | null> => {
     plan: effectivePlan(user.plan, user.planExpiresAt),
     planExpiresAt: user.planExpiresAt && effectivePlan(user.plan, user.planExpiresAt) === "pro" ? user.planExpiresAt.toISOString() : null,
     targetBand: user.targetBand ?? 7,
+    isAdmin: isAdminEmail(user.email),
   };
 });
 
@@ -63,5 +73,21 @@ export async function requireApiUser(): Promise<SessionUser> {
 export async function requirePageUser(returnTo: string): Promise<SessionUser> {
   const user = await getSessionUser();
   if (!user) redirect(`/login?from=${encodeURIComponent(returnTo)}`);
+  return user;
+}
+
+/**
+ * Admin pages: anyone who is not an admin gets a 404, so the admin area's
+ * existence is not revealed.
+ */
+export async function requireAdminPage(): Promise<SessionUser> {
+  const user = await getSessionUser();
+  if (!user || !user.isAdmin) notFound();
+  return user;
+}
+
+export async function requireAdminApi(): Promise<SessionUser> {
+  const user = await getSessionUser();
+  if (!user || !user.isAdmin) throw new ApiError(404, "NOT_FOUND", "Not found.");
   return user;
 }

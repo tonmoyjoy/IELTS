@@ -39,7 +39,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4" noValidate>
+    <form method="post" onSubmit={onSubmit} className="space-y-4" noValidate>
       <div>
         <label htmlFor="password" className={labelClass}>New password</label>
         <input id="password" type="password" autoComplete="new-password" required minLength={8} value={password}

@@ -19,6 +19,8 @@ const userSchema = new Schema(
     planExpiresAt: { type: Date },
     targetBand: { type: Number, min: 1, max: 9, default: 7 },
     lastLoginAt: { type: Date },
+    /** Google account id ("sub") once the user has signed in with Google. */
+    googleId: { type: String, unique: true, sparse: true },
   },
   { timestamps: true }
 );

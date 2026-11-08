@@ -63,7 +63,7 @@ export async function startCheckout(input: {
  * the current expiry. Uses compare-and-set so two payments confirmed at the
  * same moment both count.
  */
-async function extendPro(userId: Types.ObjectId, days: number): Promise<Date | null> {
+export async function extendPro(userId: Types.ObjectId, days: number): Promise<Date | null> {
   for (let attempt = 0; attempt < 5; attempt += 1) {
     const user = await User.findById(userId).select("plan planExpiresAt").lean();
     if (!user) throw new Error("User not found for payment");

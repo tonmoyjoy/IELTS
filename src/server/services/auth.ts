@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import { connectDb } from "@/server/db";
 import { User } from "@/server/models/User";
 import { ApiError } from "@/server/http/api";
@@ -173,4 +174,67 @@ export async function resetPassword(token: string, password: string): Promise<vo
 export async function updateTargetBand(userId: string, targetBand: number): Promise<void> {
   await connectDb();
   await User.updateOne({ _id: userId }, { $set: { targetBand } });
+}
+
+/**
+ * Signs in (or up) with a Google identity whose email Google has verified.
+ *
+ * Linking rules:
+ * - Already linked (same Google id) → sign in.
+ * - Existing *verified* account with that email → link and sign in.
+ * - Existing *unverified* account → someone may have pre-registered this
+ *   email to hijack it later, so its password is replaced with a random one
+ *   and all its sessions are revoked before linking. The real owner can set
+ *   a password any time with "Forgot password".
+ * - No account → create a verified account with an unusable random password.
+ */
+export async function signInWithGoogle(identity: { sub: string; email: string }): Promise<AuthenticatedAccount> {
+  const email = normalizeEmail(identity.email);
+  await connectDb();
+
+  const linked = await User.findOne({ googleId: identity.sub }).select("tokenVersion").lean();
+  if (linked) {
+    await User.updateOne({ _id: linked._id }, { $set: { lastLoginAt: new Date() } });
+    return { id: String(linked._id), tokenVersion: linked.tokenVersion ?? 0 };
+  }
+
+  const existing = await User.findOne({ email }).select("emailVerified tokenVersion googleId").lean();
+  if (existing) {
+    if (existing.googleId && existing.googleId !== identity.sub) {
+      throw new ApiError(409, "GOOGLE_ACCOUNT_MISMATCH", "This email is already linked to a different Google account.");
+    }
+    if (existing.emailVerified) {
+      await User.updateOne({ _id: existing._id }, { $set: { googleId: identity.sub, lastLoginAt: new Date() } });
+      return { id: String(existing._id), tokenVersion: existing.tokenVersion ?? 0 };
+    }
+    const nextVersion = (existing.tokenVersion ?? 0) + 1;
+    await User.updateOne(
+      { _id: existing._id },
+      {
+        $set: {
+          googleId: identity.sub,
+          emailVerified: true,
+          password: await hashPassword(randomBytes(32).toString("base64url")),
+          tokenVersion: nextVersion,
+          lastLoginAt: new Date(),
+        },
+        $unset: { emailVerificationTokenHash: 1, emailVerificationExpires: 1, passwordResetTokenHash: 1, passwordResetExpires: 1 },
+      }
+    );
+    return { id: String(existing._id), tokenVersion: nextVersion };
+  }
+
+  try {
+    const created = await User.create({
+      email,
+      password: await hashPassword(randomBytes(32).toString("base64url")),
+      emailVerified: true,
+      googleId: identity.sub,
+      lastLoginAt: new Date(),
+    });
+    return { id: String(created._id), tokenVersion: 0 };
+  } catch (error) {
+    if (isDuplicateKey(error)) return signInWithGoogle(identity); // raced with another sign-in
+    throw error;
+  }
 }

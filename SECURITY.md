@@ -13,6 +13,10 @@
 | AI prompt injection | System instruction separated from candidate text; tagged data blocks; schema-validated output; overall band derived on the server | `server/ai/*` |
 | AI cost abuse | Recording length measured on the server; size limits; atomic daily quotas per plan; refunds only on provider failure | `app/api/speaking`, `server/billing/quota.ts` |
 | Payment fraud | Prices set on the server; success only after SSLCommerz validation API confirms `tran_id`, amount and currency; idempotent claim so redirect + IPN grant Pro once; mismatches and high-risk payments held for review; callbacks rate-limited | `server/billing/payments.ts`, `server/billing/callbacks.ts` |
+| Google sign-in | Authorization code + PKCE (S256), `state` and `nonce` in a signed 10-minute cookie, ID token verified against Google's JWKS (issuer, audience, expiry, `email_verified`) | `server/auth/google.ts` |
+| Account pre-hijacking | Linking Google to an *unverified* account replaces its password and revokes its sessions | `server/services/auth.ts` |
+| Admin access | `ADMIN_EMAILS` checked server-side on every request; non-admins (and anonymous users) get a real 404; mutations same-origin guarded and audit-logged | `server/auth/session.ts`, `server/services/admin.ts` |
+| Credential leakage in URLs | Every form uses `method="post"`, so a page that isn't interactive yet never puts passwords in the address bar | auth forms |
 | Open redirect | `from` parameter restricted to same-site relative paths | `lib/text.ts` |
 | Secret leakage | Provider errors mapped to generic messages; health check reveals no configuration | `server/ai/errors.ts`, `app/api/health` |
 | Misconfiguration | Production refuses to run without required secrets (32+ char JWT secret, DB, email, app URL) | `server/env.ts` |

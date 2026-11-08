@@ -56,7 +56,7 @@ beforeEach(async () => {
   resetMemoryRateLimits();
   const db = mongoose.connection.db;
   if (db) {
-    for (const name of ["users", "practiceattempts", "usages", "payments"]) {
+    for (const name of ["users", "practiceattempts", "usages", "payments", "adminauditlogs"]) {
       await db.collection(name).deleteMany({});
     }
   }

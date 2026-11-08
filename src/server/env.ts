@@ -57,6 +57,16 @@ const envSchema = z
 
     SENTRY_DSN: optionalString,
 
+    GOOGLE_CLIENT_ID: optionalString,
+    GOOGLE_CLIENT_SECRET: optionalString,
+    /** Test-only overrides of Google's OAuth endpoints. */
+    GOOGLE_AUTH_URL: optionalString,
+    GOOGLE_TOKEN_URL: optionalString,
+    GOOGLE_JWKS_URL: optionalString,
+
+    /** Comma-separated emails that get access to /admin. */
+    ADMIN_EMAILS: csv,
+
     SSLCOMMERZ_STORE_ID: optionalString,
     SSLCOMMERZ_STORE_PASSWORD: optionalString,
     SSLCOMMERZ_MODE: z.enum(["sandbox", "live"]).default("sandbox"),

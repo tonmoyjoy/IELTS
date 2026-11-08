@@ -5,7 +5,7 @@ import { ComfortMenu } from "@/components/app/ComfortMenu";
 import { Logo } from "@/components/app/Logo";
 import type { PlanId } from "@/lib/plans";
 
-export function AppHeader({ email, plan, planExpiresAt }: { email: string; plan: PlanId; planExpiresAt: string | null }) {
+export function AppHeader({ email, plan, planExpiresAt, isAdmin }: { email: string; plan: PlanId; planExpiresAt: string | null; isAdmin: boolean }) {
   const until = planExpiresAt
     ? new Date(planExpiresAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" })
     : null;
@@ -17,6 +17,11 @@ export function AppHeader({ email, plan, planExpiresAt }: { email: string; plan:
         </Link>
         <NavLinks />
         <div className="flex items-center gap-1.5 text-sm">
+          {isAdmin && (
+            <Link href="/admin" className="rounded-full px-3 py-1 text-xs font-semibold text-ink-soft hover:bg-sunken hover:text-ink">
+              Admin
+            </Link>
+          )}
           <Link
             href="/billing"
             title={plan === "pro" ? (until ? `Pro until ${until}` : "Pro") : "Upgrade to Pro"}

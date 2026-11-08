@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { AuthCard } from "@/components/auth/AuthCard";
 import { RegisterForm } from "./RegisterForm";
+import { GoogleButton } from "@/components/auth/GoogleButton";
+import { isGoogleConfigured } from "@/server/auth/google";
 
 export const metadata: Metadata = { title: "Create account" };
 
@@ -19,7 +21,10 @@ export default function RegisterPage() {
         </>
       }
     >
-      <RegisterForm />
+      <div className="space-y-5">
+        {isGoogleConfigured() && <GoogleButton label="Sign up with Google" />}
+        <RegisterForm />
+      </div>
     </AuthCard>
   );
 }

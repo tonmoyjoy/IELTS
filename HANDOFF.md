@@ -4,7 +4,7 @@ Read this first. It explains what the project is, what it looked like before the
 hardening pass, what was changed and why, the rules not to break, and what to do
 next. Branch `hardening` contains all work (`main` is the original). Commits:
 `cba51c1` hardening pass · `1a93629` this file · then the redesign + payments
-commit (section 3b). Run `git diff main hardening` for line-level detail.
+commit (section 3b) · then Google sign-in + admin + LAN fix (section 3c). Run `git diff main hardening` for line-level detail.
 
 ---
 
@@ -191,6 +191,40 @@ dead toolbar buttons), Task 1 charts never shown to the student, deprecated
   billing page shows "being set up".
 - E2E uses `tests/support/fake-sslcommerz.mjs` (fake init/pay page/validation on :4600).
 
+### 3c. Google sign-in, admin area, LAN dev (third pass)
+
+**LAN / phone access in dev** — Next 16 blocks cross-origin `/_next/*` dev resources,
+so from `http://192.168.x.x:3000` the page never hydrated and forms submitted natively.
+Fix: `allowedDevOrigins` in `next.config.ts` includes all private ranges + `*.local`
+(+ `DEV_ALLOWED_ORIGINS`), and `isLocalDevOrigin()` in `server/http/guards.ts` lets the
+CSRF guard accept private-network origins **only when NODE_ENV !== production**.
+Mic needs HTTPS off localhost → `npm run dev:https`.
+
+**Google sign-in** (`server/auth/google.ts`, `/api/auth/google/{start,callback}`)
+- Code flow + PKCE S256, `state` + `nonce` in a signed 10-min cookie (path `/api/auth/google`).
+- ID token verified with Google JWKS (issuer, aud = client id, exp, nonce, `email_verified`).
+- `signInWithGoogle()` in `services/auth.ts`: link by `googleId`, else link a verified
+  account by email, else link an **unverified** account after replacing its password and
+  bumping tokenVersion (pre-hijack defence), else create. Different googleId → 409.
+- Button only renders when `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET` set. Redirect URI =
+  `APP_URL/api/auth/google/callback`. Google refuses private-IP redirect URIs.
+- Phone/SMS login deliberately not built (owner: avoid SMS costs).
+
+**Admin** (`/admin`, `/admin/payments`, `/admin/users`)
+- `ADMIN_EMAILS` (csv) → `SessionUser.isAdmin`. `requireAdminPage()` → `notFound()`,
+  `requireAdminApi()` → 404. Lives in its own `(admin)` route group **with no loading.tsx**
+  so the 404 is a real HTTP 404 (a streaming boundary would send 200).
+- `services/admin.ts`: revenue stats, payment list/search, approve (review|pending →
+  paid, extends Pro once) / reject, grant/extend/revoke Pro, all written to `AdminAuditLog`.
+- APIs: `POST /api/admin/payments/[id] {action: approve|reject, note?}`,
+  `POST /api/admin/users/[id] {action: grant, days 1–730 | revoke, note?}`.
+
+**Forms** all use `method="post"` so a non-hydrated submit never puts passwords in the URL.
+
+**Tests added:** unit guards; integration `google.test.ts` (8), `admin.test.ts` (8);
+E2E `google.spec.ts` (3, with `tests/support/fake-google.mjs` on :4601), `admin.spec.ts` (4),
+a no-JS form test.
+
 ---
 
 ## 4. Rules — do not break these
@@ -212,6 +246,9 @@ dead toolbar buttons), Task 1 charts never shown to the student, deprecated
    variants; long text uses `.prose-reading`. Check contrast if you add tokens.
 10. **Payments:** never grant Pro from callback data; only `confirmPayment()` after the
     validation API. Prices come from `BILLING_OPTIONS`, never the client.
+11. **Admin pages stay in `(admin)`** (no loading.tsx) and every admin page/API calls
+    `requireAdminPage()` / `requireAdminApi()`. Every admin mutation writes an audit log.
+12. **Forms use `method="post"`** plus `onSubmit` preventDefault.
 
 ---
 
@@ -219,9 +256,9 @@ dead toolbar buttons), Task 1 charts never shown to the student, deprecated
 
 | Command | Notes |
 | --- | --- |
-| `npm test` | 124 unit tests, no DB |
-| `npm run test:integration` | 44 tests (incl. 11 payment cases); real DB via `TEST_MONGODB_URI`, else mongodb-memory-server |
-| `npm run build && npm run test:e2e` | 25 Playwright tests vs production build + fake gateway; `E2E_MONGODB_URI` |
+| `npm test` | 134 unit tests, no DB |
+| `npm run test:integration` | 60 tests (incl. payments, Google, admin); real DB via `TEST_MONGODB_URI`, else mongodb-memory-server |
+| `npm run build && npm run test:e2e` | 33 Playwright tests vs production build + fake SSLCommerz + fake Google; `E2E_MONGODB_URI` |
 | `npm run verify` | lint + typecheck + unit + build |
 
 Gotchas learned:
@@ -247,8 +284,9 @@ Gotchas learned:
 - No account deletion / data export, privacy policy or terms yet.
 - Concurrent-quota test has only run against FerretDB (skipped), not real MongoDB.
 - Payments tested only against a fake gateway + mocked API; not yet run against the
-  real SSLCommerz sandbox. No admin UI for "review" payments (resolve in the DB:
-  set Payment `status: "paid"` and extend the user's `planExpiresAt`), no refunds UI.
+  real SSLCommerz sandbox. Review payments are handled in `/admin`; no refunds UI
+  (refund in the SSLCommerz panel, then "Remove Pro" in admin).
+- Google sign-in tested against a fake Google server; try it with real credentials.
 
 ---
 
@@ -269,7 +307,7 @@ Gotchas learned:
 7. Test with real SSLCommerz sandbox credentials (put them in `.env.local`, buy a
    plan with their test bKash/card details), then apply for a live merchant account,
    set `SSLCOMMERZ_MODE=live`, and register the IPN URL in the merchant panel.
-8. Small admin page for "review" payments and manual Pro grants; email receipts.
+8. Email receipts; refund flow in admin.
 
 **Product growth**
 9. More content: full 40-question reading/listening tests, more writing and

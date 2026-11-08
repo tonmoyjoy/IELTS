@@ -2,6 +2,18 @@ import type { NextConfig } from "next";
 
 const isProd = process.env.NODE_ENV === "production";
 
+/**
+ * Lets phones/laptops on the same Wi-Fi open the dev server via its
+ * "Network" URL (e.g. http://192.168.0.107:3000). Dev only; covers every
+ * private IPv4 range plus mDNS *.local names.
+ */
+const PRIVATE_NETWORK_DEV_ORIGINS = [
+  "192.168.*.*",
+  "10.*.*.*",
+  ...Array.from({ length: 16 }, (_, i) => `172.${16 + i}.*.*`),
+  "*.local",
+];
+
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
@@ -15,11 +27,14 @@ const nextConfig: NextConfig = {
   output: "standalone",
   poweredByHeader: false,
   serverExternalPackages: ["mongodb-memory-server"],
-  // Allow testing the dev server from other devices on your LAN, e.g. DEV_ALLOWED_ORIGINS=192.168.1.20
-  allowedDevOrigins: (process.env.DEV_ALLOWED_ORIGINS ?? "")
-    .split(",")
-    .map((value) => value.trim())
-    .filter(Boolean),
+  allowedDevOrigins: [
+    ...PRIVATE_NETWORK_DEV_ORIGINS,
+    // Anything else (e.g. a tunnel hostname): DEV_ALLOWED_ORIGINS=my-tunnel.example.com
+    ...(process.env.DEV_ALLOWED_ORIGINS ?? "")
+      .split(",")
+      .map((value) => value.trim())
+      .filter(Boolean),
+  ],
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },

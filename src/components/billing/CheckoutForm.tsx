@@ -37,7 +37,7 @@ export function CheckoutForm({ initialOption, extending }: { initialOption: Bill
   const phoneError = firstFieldError(fields, "phone");
 
   return (
-    <form onSubmit={onSubmit} className="space-y-6" noValidate>
+    <form method="post" onSubmit={onSubmit} className="space-y-6" noValidate>
       <fieldset>
         <legend className={labelClass}>Choose a plan</legend>
         <div className="mt-3 grid gap-3 sm:grid-cols-3">

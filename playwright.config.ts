@@ -10,6 +10,7 @@ import { defineConfig, devices } from "@playwright/test";
  */
 const PORT = Number(process.env.E2E_PORT ?? 3100);
 const BASE_URL = `http://localhost:${PORT}`;
+const E2E_USER_EMAIL = "e2e.student@example.com"; // keep in sync with tests/e2e/constants.ts
 export const E2E_MONGODB_URI = process.env.E2E_MONGODB_URI ?? "mongodb://127.0.0.1:27017/ielts_e2e";
 
 export default defineConfig({
@@ -45,6 +46,12 @@ export default defineConfig({
       env: { PORT: "4600" },
     },
     {
+      command: "node tests/support/fake-google.mjs",
+      url: "http://localhost:4601/health",
+      reuseExistingServer: !process.env.CI,
+      env: { PORT: "4601", CLIENT_ID: "e2e-client" },
+    },
+    {
     command: `npx next start --port ${PORT}`,
     url: `${BASE_URL}/api/health`,
     reuseExistingServer: !process.env.CI,
@@ -59,6 +66,12 @@ export default defineConfig({
       SSLCOMMERZ_STORE_ID: "teststore",
       SSLCOMMERZ_STORE_PASSWORD: "teststore@ssl",
       SSLCOMMERZ_BASE_URL: "http://localhost:4600",
+      GOOGLE_CLIENT_ID: "e2e-client",
+      GOOGLE_CLIENT_SECRET: "e2e-secret",
+      GOOGLE_AUTH_URL: "http://localhost:4601/auth",
+      GOOGLE_TOKEN_URL: "http://localhost:4601/token",
+      GOOGLE_JWKS_URL: "http://localhost:4601/certs",
+      ADMIN_EMAILS: E2E_USER_EMAIL,
     },
     },
   ],

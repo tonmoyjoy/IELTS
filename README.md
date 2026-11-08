@@ -7,6 +7,8 @@ Practice all four Academic IELTS modules with exam-style tasks, instant marking 
 - **Speaking:** timed Part 1–3 simulation plus recorded answers. The AI hears the audio, so pronunciation and fluency are judged from speech, not guessed from text.
 - **Progress:** dashboard with an estimated overall band, target tracking, per-module stats and full attempt history, including word-level diffs between essay revisions.
 - **Payments:** prepaid Pro (৳300 / 1 month, ৳600 / 3 months, ৳1,500 / 12 months) via SSLCommerz — bKash, Nagad, Rocket and Visa/Mastercard/Amex. Confirmed server-side; buying again extends Pro.
+- **Sign-in:** email + password (with verification) or **Continue with Google** (OAuth 2.0 + PKCE).
+- **Admin area (`/admin`):** revenue stats, all payments with search/filters, approve or reject held payments, give/extend/remove Pro, audit log. Access via `ADMIN_EMAILS`.
 - **Eye-friendly design:** warm sepia light theme and night mode (WCAG AA contrast), serif reading face, adjustable text size, optional 20-20-20 eye-rest reminders.
 
 > Scores are practice estimates, not official IELTS results.
@@ -25,6 +27,8 @@ npm run dev        # http://localhost:3000
 ```
 
 With no `MONGODB_URI`, development uses an in-memory MongoDB, and emails (verification links) are printed to the server log.
+
+**On your phone (same Wi-Fi):** open the "Network" URL that `npm run dev` prints (e.g. `http://192.168.0.107:3000`). Recording audio needs HTTPS on anything except localhost, so for Speaking practice on a phone run `npm run dev:https` and accept the browser's certificate warning. Google sign-in only works from `localhost` or your real domain (Google rejects private IP addresses).
 
 ### Docker
 
