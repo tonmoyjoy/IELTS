@@ -4,7 +4,7 @@ Read this first. It explains what the project is, what it looked like before the
 hardening pass, what was changed and why, the rules not to break, and what to do
 next. Branch `hardening` contains all work (`main` is the original). Commits:
 `cba51c1` hardening pass · `1a93629` this file · then the redesign + payments
-commit (section 3b) · then Google sign-in + admin + LAN fix (section 3c). Run `git diff main hardening` for line-level detail.
+commit (section 3b) · then Google sign-in + admin + LAN fix (section 3c) · then computer-test screens, natural voices and the full mock test (section 3d) · then the admin content editor (section 3e). Run `git diff main hardening` for line-level detail.
 
 ---
 
@@ -225,6 +225,55 @@ Mic needs HTTPS off localhost → `npm run dev:https`.
 E2E `google.spec.ts` (3, with `tests/support/fake-google.mjs` on :4601), `admin.spec.ts` (4),
 a no-JS form test.
 
+### 3d. Computer-delivered test experience + natural voices (fourth pass)
+
+**Voices (Gemini TTS)** — `scripts/generate-audio.mjs` (`npm run audio:generate`, runs on the owner's PC with
+`GEMINI_API_KEY`). Uses the Interactions API (`gemini-3.8-flash-tts`, override `GEMINI_TTS_MODEL`) and falls back
+to `generateContent` + `gemini-2.5-flash-preview-tts` if unavailable. Dialogue is chunked to ≤2 speakers per
+request (`scripts/lib/tts-audio.mjs`, unit-tested), each speaker gets a distinct prebuilt voice, a narrator reads
+the `intro` in `listening-scripts.json`, and output is encoded to 64 kbps MP3 with `@breezystack/lamejs` (pure JS,
+no ffmpeg). Clips are cached in `.cache/tts`; finished files are listed in `src/content/audio-manifest.json`,
+which the app reads (`src/content/audio.ts`). Speaking content moved to JSON (`speaking-sets.json`,
+`examiner-lines.json`) so the script can read it. Old espeak script: `npm run audio:generate:offline`.
+
+**CBT screens** (`src/components/cbt/`) — full-screen overlay (`CbtShell`), `ObjectiveTest` for Reading/Listening
+(parts with continuous numbering via `content/tests.ts`, highlights in `lib/highlights.ts`, flags, navigator,
+exam/practice/review modes, drafts in localStorage, submits one attempt per part through the existing
+`/api/practice/attempts`), `ExamAudio` (play once, volume only; 2-minute check time), `WritingTest` (1–2 tasks,
+shared timer, auto-submit, Task 2 double weight), `SpeakingExam` (talking examiner: plays
+`/speaking/<set>/<key>.mp3` or falls back to `speechSynthesis`; MediaRecorder at 32 kbps paused while the examiner
+talks and during Part 2 prep; submits with `mode=full`, allowed up to 16 min / 12 MB). `/practice/<module>/full`
+runs the full test. Old components (QuestionSetRunner, ListeningPlayer, WritingEditor, TimedSpeaking) removed.
+
+**Mock test** — `models/MockTest.ts`, `services/mock.ts`, `lib/mock.ts`, APIs `POST /api/mock`,
+`POST /api/mock/[id]/start`, `POST /api/mock/[id]/section {section, attemptIds}`, pages `/practice/mock`,
+`/practice/mock/[id]`. The server sets `sectionStartedAt`; the client counts down to its deadline. A section is
+recorded only from the user's own attempts created after the section started for the assigned content
+(compare-and-set on `section`); late submissions are accepted but flagged. Needs 2 writing + 1 speaking evaluations.
+
+### 3e. Admin content editor (fifth pass)
+
+- **Catalog** (`server/content/catalog.ts`): the single source for content on the server. `list*/find*` merge
+  built-in sets (`src/content/*`) with **published** `ContentItem`s; `answerKeysFor`, `scriptFor`,
+  `examinerClips` do the same for server-only data. Every page/API now uses it (`gradeSet` takes the keys).
+  Full tests (`/practice/*/full`) stay built-in; **mock tests pick randomly from the whole catalog**
+  (one listening part per section where possible, 3 passages, Task 1 + Task 2, one speaking topic).
+- **Models:** `ContentItem` (kind, slug = public id, status draft|published|archived, payload = public shape,
+  answers + script = server-only, audio clip ids + hash, source ai|manual|copy, brief) and `AudioClip`
+  (MP3 bytes in MongoDB, served by `GET /api/audio/[id]` with byte ranges + immutable caching).
+- **Validation** (`server/content/validate.ts`): Zod shapes + the same integrity rules as the content test
+  (numbering, keys for every question, choice answers among options, text answers within the word limit and
+  present word-for-word in the passage/script, question ids prefixed with the slug, Task 1/2 timing).
+- **AI drafts** (`server/ai/content-drafter.ts`, model `GEMINI_CONTENT_MODEL`, default gemini-2.5-flash): the
+  model writes an intermediate format (tfng/ynng/matching/mcq/completion groups) that `convertDraft` turns into
+  app content; one automatic retry listing validation problems. Drafts are never auto-published.
+- **Publishing** (`server/services/content-admin.ts`): must validate; listening/speaking render audio with
+  `server/audio/tts.ts` (same helpers as the CLI, `server/audio/tts-audio.mjs`) unless the script hash is
+  unchanged. Published items can't be edited (unpublish first) or deleted (only never-published drafts).
+- **UI:** `/admin/content` (AI draft form, copy built-in, filters, list) and `/admin/content/[id]` (JSON editor,
+  live preview, Check / Save / Publish / Unpublish / Delete). APIs `POST /api/admin/content`
+  `{action: draft|copy}` and `GET|POST /api/admin/content/[id]` `{action: validate|save|publish|unpublish|delete}`.
+
 ---
 
 ## 4. Rules — do not break these
@@ -249,6 +298,13 @@ a no-JS form test.
 11. **Admin pages stay in `(admin)`** (no loading.tsx) and every admin page/API calls
     `requireAdminPage()` / `requireAdminApi()`. Every admin mutation writes an audit log.
 12. **Forms use `method="post"`** plus `onSubmit` preventDefault.
+13. **Test screens never grade in the browser.** They only collect answers and post them to the existing
+    attempt/evaluation APIs; mock results are computed in `services/mock.ts` from stored attempts.
+14. **New audio goes through `npm run audio:generate`** and the manifest; never hard-code a clip the manifest
+    doesn't list (the examiner falls back to the browser voice for missing clips).
+15. **Look content up through `server/content/catalog.ts`** on the server, never `src/content/*` directly
+    (except full tests, which are deliberately built-in), so published admin content works everywhere.
+16. **Admin-created question ids start with the item's slug**; slugs never change once published.
 
 ---
 
@@ -256,9 +312,9 @@ a no-JS form test.
 
 | Command | Notes |
 | --- | --- |
-| `npm test` | 134 unit tests, no DB |
-| `npm run test:integration` | 60 tests (incl. payments, Google, admin); real DB via `TEST_MONGODB_URI`, else mongodb-memory-server |
-| `npm run build && npm run test:e2e` | 33 Playwright tests vs production build + fake SSLCommerz + fake Google; `E2E_MONGODB_URI` |
+| `npm test` | 159 unit tests, no DB |
+| `npm run test:integration` | 71 tests (incl. payments, Google, admin, mock test, content editor); real DB via `TEST_MONGODB_URI`, else mongodb-memory-server |
+| `npm run build && npm run test:e2e` | 38 Playwright tests vs production build + fake SSLCommerz + fake Google; `E2E_MONGODB_URI` |
 | `npm run verify` | lint + typecheck + unit + build |
 
 Gotchas learned:
@@ -276,8 +332,9 @@ Gotchas learned:
 
 ## 6. Known limitations
 
-- Listening audio is synthetic TTS → replace with real/neural recordings
-  (keep scripts identical; answers depend on the text).
+- Gemini TTS generation was tested against a fake server only; run `npm run audio:generate` and listen to the clips.
+- Content is still small (3 reading passages, 3 listening parts, 5 writing tasks, 3 speaking sets), so the "full"
+  tests are 36 reading / 30 listening questions, scaled to the 40-question band tables.
 - AI scoring was tested only with mocked responses → not yet calibrated.
 - Docker image not built in the dev sandbox (the standalone server it runs was tested).
 - Logout clears this browser's cookie only (no "sign out everywhere" button yet).
@@ -296,7 +353,8 @@ Gotchas learned:
 1. Push `hardening`, open a PR, let CI pass on GitHub (first real-MongoDB run of the concurrency test).
 2. Calibrate AI: score 10–20 essays and recordings with known examiner bands;
    adjust prompts/model if consistently off by more than 0.5.
-3. Replace listening MP3s with human or neural TTS recordings.
+3. Use `/admin/content` to add content: at least one Listening Part 3 and Part 4, more passages and topics.
+   Review every AI draft (answers, NOT GIVEN logic) before publishing.
 4. Privacy policy + terms (audio and essays go to Google Gemini; use a paid
    Gemini tier so user data isn't used for training).
 5. Account deletion + data export (`DELETE /api/account`).

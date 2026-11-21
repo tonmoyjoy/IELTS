@@ -17,6 +17,8 @@
 | Account pre-hijacking | Linking Google to an *unverified* account replaces its password and revokes its sessions | `server/services/auth.ts` |
 | Admin access | `ADMIN_EMAILS` checked server-side on every request; non-admins (and anonymous users) get a real 404; mutations same-origin guarded and audit-logged | `server/auth/session.ts`, `server/services/admin.ts` |
 | Credential leakage in URLs | Every form uses `method="post"`, so a page that isn't interactive yet never puts passwords in the address bar | auth forms |
+| Mock test score inflation | Section results are built on the server from attempts the user created **after** the section started, for exactly the assigned content; double submits are compare-and-set; section clocks are server timestamps | `server/services/mock.ts` |
+| Content tampering | Content editor APIs are admin-only (404 for others), same-origin, rate-limited and audit-logged; answers and scripts stay server-side; live tests can't be edited in place, only unpublished; nothing publishes without passing validation | `server/services/content-admin.ts`, `server/content/validate.ts` |
 | Open redirect | `from` parameter restricted to same-site relative paths | `lib/text.ts` |
 | Secret leakage | Provider errors mapped to generic messages; health check reveals no configuration | `server/ai/errors.ts`, `app/api/health` |
 | Misconfiguration | Production refuses to run without required secrets (32+ char JWT secret, DB, email, app URL) | `server/env.ts` |

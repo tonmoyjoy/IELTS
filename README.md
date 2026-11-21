@@ -2,13 +2,16 @@
 
 Practice all four Academic IELTS modules with exam-style tasks, instant marking and examiner-style AI feedback.
 
-- **Listening & Reading:** original passages and recordings, marked on the server against hidden answer keys, converted to an estimated band with an explanation for every answer.
-- **Writing:** timed Task 1 (charts, processes) and Task 2 essays, scored on the four official criteria.
-- **Speaking:** timed Part 1–3 simulation plus recorded answers. The AI hears the audio, so pronunciation and fluency are judged from speech, not guessed from text.
+- **Computer-delivered test screens:** full-screen layout like the real computer test — split passage/questions with a draggable divider, text highlighting, question flags, a numbered navigator, countdown timer, exam mode (timed, auto-submit) and practice mode, then a review mode with explanations. Full Reading, Listening and Writing tests as well as single sets.
+- **Listening & Reading:** original passages and recordings with natural multi-speaker voices (Gemini TTS), marked on the server against hidden answer keys. Exam-mode audio plays once, then 2 minutes to check.
+- **Writing:** Task 1 (charts, processes) and Task 2 on a split screen with live word count, scored on the four official criteria; the full test combines both (Task 2 counts double).
+- **Speaking:** a talking examiner asks every Part 1–3 question out loud, gives 1 minute to prepare Part 2, records only the candidate and scores the whole test. Single-answer recording is still available.
+- **Full mock test:** Listening → Reading → Writing → Speaking with a server-kept clock per section and an overall band report.
 - **Progress:** dashboard with an estimated overall band, target tracking, per-module stats and full attempt history, including word-level diffs between essay revisions.
 - **Payments:** prepaid Pro (৳300 / 1 month, ৳600 / 3 months, ৳1,500 / 12 months) via SSLCommerz — bKash, Nagad, Rocket and Visa/Mastercard/Amex. Confirmed server-side; buying again extends Pro.
 - **Sign-in:** email + password (with verification) or **Continue with Google** (OAuth 2.0 + PKCE).
 - **Admin area (`/admin`):** revenue stats, all payments with search/filters, approve or reject held payments, give/extend/remove Pro, audit log. Access via `ADMIN_EMAILS`.
+- **Content editor (`/admin/content`):** Gemini drafts new Reading passages, Listening parts, Writing tasks and Speaking topics (or copy a built-in set as a template); edit as JSON with a live preview; every answer is checked against the text before publishing; publishing records the listening audio and examiner questions with Gemini TTS. Published tests appear in the practice lists and mock tests.
 - **Eye-friendly design:** warm sepia light theme and night mode (WCAG AA contrast), serif reading face, adjustable text size, optional 20-20-20 eye-rest reminders.
 
 > Scores are practice estimates, not official IELTS results.
@@ -25,6 +28,8 @@ npm install
 cp .env.example .env.local   # add GEMINI_API_KEY to try AI scoring
 npm run dev        # http://localhost:3000
 ```
+
+**Natural voices (once):** run `npm run audio:generate`. It uses your `GEMINI_API_KEY` to render the listening recordings and the speaking examiner's questions to MP3 files in `public/`, and records them in `src/content/audio-manifest.json`. If it stops (free-tier rate limit), run it again later: finished clips are cached in `.cache/tts`. Until then the examiner uses the browser's built-in voice.
 
 With no `MONGODB_URI`, development uses an in-memory MongoDB, and emails (verification links) are printed to the server log.
 
@@ -48,14 +53,15 @@ docker compose up --build
 | `npm run test:e2e` | Playwright against the production build (`E2E_MONGODB_URI`) |
 | `npm run test:smoke` | Post-deploy checks against `BASE_URL` |
 | `npm run verify` | Lint + typecheck + unit tests + build |
-| `npm run audio:generate` | Re-render listening MP3s from the scripts (needs `espeak-ng`, `mbrola`, `ffmpeg`) |
+| `npm run audio:generate` | Render listening recordings and examiner questions with Gemini TTS (`-- --force` to redo, `-- listening` / `-- speaking` to limit) |
+| `npm run audio:generate:offline` | Old offline robotic voices (needs `espeak-ng`, `mbrola`, `ffmpeg`) |
 
 ## Architecture
 
 ```
 src/
   app/                 Routes. (auth) = sign-in flows, (app) = signed-in area, api/ = JSON API
-  components/          UI (ui.tsx primitives; practice/, dashboard/, history/, auth/)
+  components/          UI (ui.tsx primitives; cbt/ computer-test screens; practice/, mock/, dashboard/, history/, auth/)
   content/             Public practice content: passages, questions, tasks (no answers)
   lib/                 Client-safe helpers: band maths, text, API client, SSE reader, plans
   server/              Server-only code
@@ -91,7 +97,7 @@ The app validates its configuration on the first request and fails loudly if any
 
 ## Before charging money
 
-- Replace the synthetic listening audio (`public/listening/*.mp3`) with human or neural-TTS recordings of the same scripts; answer keys depend only on the script text.
+- Run `npm run audio:generate` and listen to every clip once; re-render any that sound wrong with `-- --force <id>`.
 - Add a privacy policy and terms (audio is sent to Google's Gemini API for assessment; on Gemini's free tier, Google may use inputs to improve its products — use a paid tier for user data).
 - Get a live SSLCommerz merchant account, set `SSLCOMMERZ_MODE=live` and register the IPN URL (`/api/billing/sslcommerz/ipn`). Prices and limits live in `src/lib/plans.ts`.
 - Payments marked "Under review" (amount mismatch or high-risk flag) need a manual decision; see HANDOFF.md.

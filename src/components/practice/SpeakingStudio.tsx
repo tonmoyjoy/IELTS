@@ -2,8 +2,7 @@
 
 import Link from "next/link";
 import type { SpeakingSet } from "@/content/types";
-import { Card } from "@/components/ui";
-import { TimedSpeaking } from "@/components/practice/TimedSpeaking";
+import { ButtonLink, Card } from "@/components/ui";
 import { SpeakingRecorder } from "@/components/practice/SpeakingRecorder";
 
 export function SpeakingStudio({ sets, active, remainingEvaluations }: { sets: SpeakingSet[]; active: SpeakingSet; remainingEvaluations: number }) {
@@ -44,8 +43,16 @@ export function SpeakingStudio({ sets, active, remainingEvaluations }: { sets: S
         </Card>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <TimedSpeaking set={active} />
+      <Card className="flex flex-wrap items-center justify-between gap-4 border-accent bg-accent-soft p-5">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wider text-accent-text">Recommended</p>
+          <h2 className="mt-1 font-semibold">Full test with a talking examiner</h2>
+          <p className="mt-1 text-sm text-ink-soft">The examiner asks every question out loud, gives you 1 minute to prepare Part 2, and scores the whole test. About 12 minutes.</p>
+        </div>
+        <ButtonLink href={`/practice/speaking?set=${active.id}&exam=1`}>Start the test</ButtonLink>
+      </Card>
+
+      <div className="max-w-2xl">
         <SpeakingRecorder key={active.id} setId={active.id} remainingEvaluations={remainingEvaluations} />
       </div>
     </div>

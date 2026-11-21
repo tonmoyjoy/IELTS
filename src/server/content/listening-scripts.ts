@@ -2,7 +2,7 @@ import "server-only";
 import scripts from "@/server/content/listening-scripts.json";
 
 export type ScriptLine = { speaker: string; text: string };
-export type ListeningScript = { voices: Record<string, "male" | "female">; lines: ScriptLine[] };
+export type ListeningScript = { intro?: string; voices: Record<string, "male" | "female">; lines: ScriptLine[] };
 
 const typed = scripts as Record<string, ListeningScript>;
 

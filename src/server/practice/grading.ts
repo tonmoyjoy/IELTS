@@ -76,11 +76,12 @@ export function gradeQuestion(question: Question, given: string, key: AnswerKey)
 export function gradeSet(
   module: "reading" | "listening",
   groups: QuestionGroup[],
-  answers: Record<string, string>
+  answers: Record<string, string>,
+  keys: Record<string, AnswerKey> = answerKeys
 ): GradeResult {
   const questions = allQuestions(groups);
   const results = questions.map((question) => {
-    const key = answerKeys[question.id];
+    const key = keys[question.id];
     if (!key) throw new Error(`Missing answer key for question ${question.id}`);
     const given = typeof answers[question.id] === "string" ? answers[question.id] : "";
     return gradeQuestion(question, given, key);

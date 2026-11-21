@@ -10,15 +10,18 @@ import { AI_PROVIDER } from "@/server/ai/client";
 import { toAiApiError } from "@/server/ai/errors";
 import { createAttempt, type AttemptSummary } from "@/server/services/attempts";
 import { getEvaluationModel } from "@/server/env";
-import { getSpeakingSet } from "@/content/speaking";
+import { findSpeaking } from "@/server/content/catalog";
 import type { SpeakingSet } from "@/content/types";
 
 export const maxDuration = 120;
 
 const MIN_SECONDS = 30;
-const MAX_SECONDS = 5 * 60;
-const MAX_AUDIO_BYTES = 10 * 1024 * 1024;
-const MAX_BODY_BYTES = MAX_AUDIO_BYTES + 64 * 1024;
+/** A single recorded answer, or a whole Part 1–3 test with the talking examiner. */
+const LIMITS = {
+  answer: { seconds: 5 * 60, bytes: 10 * 1024 * 1024, label: "5 minutes", size: "10 MB" },
+  full: { seconds: 16 * 60, bytes: 12 * 1024 * 1024, label: "16 minutes", size: "12 MB" },
+} as const;
+const MAX_BODY_BYTES = LIMITS.full.bytes + 64 * 1024;
 
 const SUPPORTED_MIME = new Map<string, string>([
   ["audio/webm", "audio/webm"],
@@ -36,7 +39,7 @@ const SUPPORTED_MIME = new Map<string, string>([
   ["audio/flac", "audio/flac"],
 ]);
 
-const fieldsSchema = z.object({ setId: z.string().max(80).optional() });
+const fieldsSchema = z.object({ setId: z.string().max(80).optional(), mode: z.enum(["answer", "full"]).default("answer") });
 
 type Prepared = {
   user: SessionUser;
@@ -44,6 +47,7 @@ type Prepared = {
   mimeType: string;
   durationSeconds: number;
   set: SpeakingSet | undefined;
+  mode: "answer" | "full";
 };
 
 async function prepare(req: Request): Promise<Prepared> {
@@ -56,7 +60,7 @@ async function prepare(req: Request): Promise<Prepared> {
     throw new ApiError(415, "UNSUPPORTED_MEDIA_TYPE", "Expected a multipart/form-data upload.");
   }
   if (Number(req.headers.get("content-length") ?? "0") > MAX_BODY_BYTES) {
-    throw new ApiError(413, "PAYLOAD_TOO_LARGE", "Recording is too large. Keep it under 10 MB.");
+    throw new ApiError(413, "PAYLOAD_TOO_LARGE", `Recording is too large. Keep it under ${LIMITS.full.size}.`);
   }
 
   let form: FormData;
@@ -66,12 +70,20 @@ async function prepare(req: Request): Promise<Prepared> {
     throw new ApiError(400, "INVALID_FORM", "Could not read the upload. Please try again.");
   }
 
+  const fields = fieldsSchema.safeParse({ setId: form.get("setId") ?? undefined, mode: form.get("mode") ?? undefined });
+  const mode = fields.success ? fields.data.mode : "answer";
+  const limits = LIMITS[mode];
+  const set = fields.success && fields.data.setId ? await findSpeaking(fields.data.setId) : undefined;
+  if (mode === "full" && !set) {
+    throw new ApiError(400, "SET_NOT_FOUND", "A full test needs a speaking topic.");
+  }
+
   const file = form.get("audio");
   if (!(file instanceof File) || file.size === 0) {
     throw new ApiError(400, "MISSING_AUDIO", "No recording was attached.");
   }
-  if (file.size > MAX_AUDIO_BYTES) {
-    throw new ApiError(413, "PAYLOAD_TOO_LARGE", "Recording is too large. Keep it under 10 MB.");
+  if (file.size > limits.bytes) {
+    throw new ApiError(413, "PAYLOAD_TOO_LARGE", `Recording is too large. Keep it under ${limits.size}.`);
   }
 
   const baseType = (file.type || "").split(";")[0].trim().toLowerCase();
@@ -79,9 +91,6 @@ async function prepare(req: Request): Promise<Prepared> {
   if (!mimeType) {
     throw new ApiError(415, "UNSUPPORTED_AUDIO", "Unsupported audio format. Use MP3, M4A, WAV, OGG or WebM.");
   }
-
-  const fields = fieldsSchema.safeParse({ setId: form.get("setId") ?? undefined });
-  const set = fields.success && fields.data.setId ? getSpeakingSet(fields.data.setId) : undefined;
 
   const audio = Buffer.from(await file.arrayBuffer());
   const durationSeconds = await getAudioDurationSeconds(audio, mimeType);
@@ -91,25 +100,25 @@ async function prepare(req: Request): Promise<Prepared> {
   if (durationSeconds < MIN_SECONDS - 0.5) {
     throw new ApiError(400, "RECORDING_TOO_SHORT", `Recording is too short. Speak for at least ${MIN_SECONDS} seconds.`);
   }
-  if (durationSeconds > MAX_SECONDS + 1) {
-    throw new ApiError(400, "RECORDING_TOO_LONG", "Recording is too long. Keep your answer under 5 minutes.");
+  if (durationSeconds > limits.seconds + 1) {
+    throw new ApiError(400, "RECORDING_TOO_LONG", `Recording is too long. Keep it under ${limits.label}.`);
   }
 
-  return { user, audio, mimeType, durationSeconds, set };
+  return { user, audio, mimeType, durationSeconds, set, mode };
 }
 
 async function runEvaluation(prepared: Prepared): Promise<{ evaluation: SpeakingEvaluation; attempt: AttemptSummary; latencyMs: number }> {
-  const { user, audio, mimeType, durationSeconds, set } = prepared;
+  const { user, audio, mimeType, durationSeconds, set, mode } = prepared;
   await reserveQuota(user.id, user.plan, "speaking");
   const started = performance.now();
   try {
-    const evaluation = await evaluateSpeaking({ audio, mimeType, durationSeconds, set });
+    const evaluation = await evaluateSpeaking({ audio, mimeType, durationSeconds, set, fullTest: mode === "full" });
     const latencyMs = Math.round(performance.now() - started);
     const attempt = await createAttempt({
       userId: user.id,
       module: "speaking",
       contentId: set?.id ?? "free-topic",
-      title: set ? `Speaking: ${set.title}` : "Speaking: free topic",
+      title: set ? `Speaking${mode === "full" ? " test" : ""}: ${set.title}` : "Speaking: free topic",
       score: evaluation.bandScore,
       summary: evaluation.summary,
       details: {
@@ -118,6 +127,7 @@ async function runEvaluation(prepared: Prepared): Promise<{ evaluation: Speaking
         strengths: evaluation.strengths,
         improvements: evaluation.improvements,
         durationSeconds: Math.round(durationSeconds),
+        mode,
       },
       ai: { provider: AI_PROVIDER, model: getEvaluationModel(), promptVersion: SPEAKING_PROMPT_VERSION, latencyMs },
     });

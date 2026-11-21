@@ -45,6 +45,8 @@ const envSchema = z
 
     GEMINI_API_KEY: optionalString,
     GEMINI_MODEL: optionalString,
+    GEMINI_CONTENT_MODEL: optionalString,
+    GEMINI_TTS_MODEL: optionalString,
     GEMINI_TRANSCRIBE_MODEL: optionalString,
 
     RATE_LIMIT_STORE: z.enum(["memory", "upstash"]).optional(),
@@ -175,6 +177,16 @@ export const DEFAULT_EVALUATION_MODEL = "gemini-2.5-flash-lite";
 
 export function getEvaluationModel(): string {
   return getEnv().GEMINI_MODEL ?? DEFAULT_EVALUATION_MODEL;
+}
+
+/** Model that drafts new practice tests in the admin content editor. */
+export function getContentModel(): string {
+  return getEnv().GEMINI_CONTENT_MODEL ?? "gemini-2.5-flash";
+}
+
+/** Text-to-speech model for listening recordings and examiner questions. */
+export function getTtsModel(): string {
+  return getEnv().GEMINI_TTS_MODEL ?? "gemini-3.8-flash-tts";
 }
 
 export function getTranscriptionModel(): string {

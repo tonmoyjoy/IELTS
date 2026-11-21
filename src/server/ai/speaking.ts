@@ -7,7 +7,7 @@ import { getEvaluationModel } from "@/server/env";
 import type { SpeakingSet } from "@/content/types";
 import { overallFromCriteria, roundToHalfBand } from "@/lib/bands";
 
-export const SPEAKING_PROMPT_VERSION = "speaking-v3.0";
+export const SPEAKING_PROMPT_VERSION = "speaking-v3.1";
 
 const band = z.number().min(0).max(9);
 
@@ -79,7 +79,7 @@ export function buildSpeakingSystemInstruction(): string {
   ].join("\n\n");
 }
 
-export function buildSpeakingContext(set: SpeakingSet | undefined, durationSeconds: number): string {
+export function buildSpeakingContext(set: SpeakingSet | undefined, durationSeconds: number, fullTest = false): string {
   const questions = set
     ? [
         `Part 1 questions: ${set.part1.join(" | ")}`,
@@ -87,7 +87,10 @@ export function buildSpeakingContext(set: SpeakingSet | undefined, durationSecon
         `Part 3 questions: ${set.part3.join(" | ")}`,
       ].join("\n")
     : "The candidate chose their own speaking topic.";
-  return `<exam_context>\nRecording length: ${Math.round(durationSeconds)} seconds.\nThe candidate may answer any of these questions:\n${questions}\n</exam_context>\n\nThe attached audio is the candidate's spoken response.`;
+  const scope = fullTest
+    ? "This is a complete Speaking test. The recording contains the candidate's answers to Part 1, the Part 2 long turn and Part 3, in that order. The examiner's voice may be faintly audible: assess only the candidate.\nThe candidate was asked these questions:"
+    : "The candidate may answer any of these questions:";
+  return `<exam_context>\nRecording length: ${Math.round(durationSeconds)} seconds.\n${scope}\n${questions}\n</exam_context>\n\nThe attached audio is the candidate's spoken response.`;
 }
 
 export function finaliseSpeakingEvaluation(raw: z.infer<typeof modelOutputSchema>): SpeakingEvaluation {
@@ -123,6 +126,7 @@ export async function evaluateSpeaking(input: {
   mimeType: string;
   durationSeconds: number;
   set: SpeakingSet | undefined;
+  fullTest?: boolean;
 }): Promise<SpeakingEvaluation> {
   const ai = getGenAI();
   const request = {
@@ -131,7 +135,7 @@ export async function evaluateSpeaking(input: {
       {
         role: "user",
         parts: [
-          { text: buildSpeakingContext(input.set, input.durationSeconds) },
+          { text: buildSpeakingContext(input.set, input.durationSeconds, input.fullTest) },
           { inlineData: { mimeType: input.mimeType, data: input.audio.toString("base64") } },
         ],
       },

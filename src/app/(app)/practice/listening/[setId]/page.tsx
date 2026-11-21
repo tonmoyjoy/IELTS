@@ -1,30 +1,34 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getListeningSet } from "@/content/listening";
-import { allQuestions } from "@/content/types";
-import { PageHeader } from "@/components/ui";
-import { QuestionSetRunner } from "@/components/practice/QuestionSetRunner";
-import { ListeningPlayer } from "@/components/practice/ListeningPlayer";
+import { findListening } from "@/server/content/catalog";
+import { FULL_TEST_ID, listeningParts, resolveListeningSets } from "@/content/tests";
+import { ObjectiveTest } from "@/components/cbt/ObjectiveTest";
 
-export async function generateMetadata({ params }: PageProps<"/practice/listening/[setId]">): Promise<Metadata> {
-  const set = getListeningSet((await params).setId);
-  return { title: set ? `Listening: ${set.title}` : "Listening" };
+async function setsFor(setId: string) {
+  if (setId === FULL_TEST_ID) return resolveListeningSets(setId);
+  const set = await findListening(setId);
+  return set ? [set] : null;
 }
 
-export default async function ListeningSetPage({ params }: PageProps<"/practice/listening/[setId]">) {
-  const set = getListeningSet((await params).setId);
-  if (!set) notFound();
+export async function generateMetadata({ params }: PageProps<"/practice/listening/[setId]">): Promise<Metadata> {
+  const { setId } = await params;
+  const sets = await setsFor(setId);
+  return { title: !sets ? "Listening" : setId === FULL_TEST_ID ? "Full Listening test" : `Listening: ${sets[0].title}` };
+}
+
+export default async function ListeningTestPage({ params }: PageProps<"/practice/listening/[setId]">) {
+  const { setId } = await params;
+  const sets = await setsFor(setId);
+  if (!sets) notFound();
+  const full = setId === FULL_TEST_ID;
 
   return (
-    <div className="space-y-6">
-      <Link href="/practice/listening" className="text-sm text-ink-faint hover:underline">← All listening sets</Link>
-      <PageHeader
-        eyebrow={`Listening · Section ${set.section}`}
-        title={set.title}
-        description={`${allQuestions(set.groups).length} questions. Take a moment to read the questions before you press play.`}
-      />
-      <QuestionSetRunner module="listening" setId={set.id} groups={set.groups} layout="stacked" aside={<ListeningPlayer src={set.audioSrc} />} />
-    </div>
+    <ObjectiveTest
+      module="listening"
+      title={full ? "Listening · Full test" : `Listening · ${sets[0].title}`}
+      parts={listeningParts(sets)}
+      storageKey={`ielts:cbt:listening:${setId}`}
+      exitHref="/practice/listening"
+    />
   );
 }

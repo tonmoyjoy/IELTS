@@ -1,47 +1,35 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getReadingSet } from "@/content/reading";
-import { allQuestions } from "@/content/types";
-import { Card, PageHeader } from "@/components/ui";
-import { QuestionSetRunner } from "@/components/practice/QuestionSetRunner";
+import { findReading } from "@/server/content/catalog";
+import { FULL_TEST_ID, readingParts, readingTimeLimitSeconds, resolveReadingSets } from "@/content/tests";
+import { ObjectiveTest } from "@/components/cbt/ObjectiveTest";
 
-export async function generateMetadata({ params }: PageProps<"/practice/reading/[setId]">): Promise<Metadata> {
-  const set = getReadingSet((await params).setId);
-  return { title: set ? `Reading: ${set.title}` : "Reading" };
+async function setsFor(setId: string) {
+  if (setId === FULL_TEST_ID) return resolveReadingSets(setId);
+  const set = await findReading(setId);
+  return set ? [set] : null;
 }
 
-export default async function ReadingSetPage({ params }: PageProps<"/practice/reading/[setId]">) {
-  const set = getReadingSet((await params).setId);
-  if (!set) notFound();
+export async function generateMetadata({ params }: PageProps<"/practice/reading/[setId]">): Promise<Metadata> {
+  const { setId } = await params;
+  const sets = await setsFor(setId);
+  return { title: !sets ? "Reading" : setId === FULL_TEST_ID ? "Full Reading test" : `Reading: ${sets[0].title}` };
+}
+
+export default async function ReadingTestPage({ params }: PageProps<"/practice/reading/[setId]">) {
+  const { setId } = await params;
+  const sets = await setsFor(setId);
+  if (!sets) notFound();
+  const full = setId === FULL_TEST_ID;
 
   return (
-    <div className="space-y-6">
-      <Link href="/practice/reading" className="text-sm text-ink-faint hover:underline">← All reading sets</Link>
-      <PageHeader
-        eyebrow="Academic Reading"
-        title={set.title}
-        description={`${allQuestions(set.groups).length} questions. You should spend about ${set.recommendedMinutes} minutes on this passage.`}
-      />
-      <QuestionSetRunner
-        module="reading"
-        setId={set.id}
-        groups={set.groups}
-        layout="split"
-        aside={
-          <Card className="p-6">
-            <h2 className="font-serif text-xl font-semibold">{set.passage.heading}</h2>
-            <div className="prose-reading mt-5 space-y-5">
-              {set.passage.paragraphs.map((paragraph) => (
-                <p key={paragraph.label}>
-                  <span className="mr-2 font-sans text-sm font-bold text-accent-text">{paragraph.label}</span>
-                  {paragraph.text}
-                </p>
-              ))}
-            </div>
-          </Card>
-        }
-      />
-    </div>
+    <ObjectiveTest
+      module="reading"
+      title={full ? "Academic Reading · Full test" : `Academic Reading · ${sets[0].title}`}
+      parts={readingParts(sets)}
+      timeLimitSeconds={readingTimeLimitSeconds(sets)}
+      storageKey={`ielts:cbt:reading:${setId}`}
+      exitHref="/practice/reading"
+    />
   );
 }

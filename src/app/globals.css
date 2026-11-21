@@ -36,6 +36,7 @@
   --warn-soft: #f3e2b6;
   --info: #36606f;
   --info-soft: #dce4dc;
+  --mark: #f2d27a;
   --shadow: 37 26 12;
   --chart-1: #b5762b;
   --chart-2: #3f7a8c;
@@ -69,6 +70,7 @@
   --warn-soft: #382c16;
   --info: #8db9cc;
   --info-soft: #1d2a2e;
+  --mark: #5e4a1a;
   --shadow: 0 0 0;
   --chart-1: #d79a4e;
   --chart-2: #7fb7c8;
@@ -102,6 +104,7 @@
   --color-warn-soft: var(--warn-soft);
   --color-info: var(--info);
   --color-info-soft: var(--info-soft);
+  --color-mark: var(--mark);
 
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-serif: var(--font-literata), Georgia, "Times New Roman", serif;

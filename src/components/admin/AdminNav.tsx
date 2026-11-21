@@ -4,6 +4,7 @@ const TABS = [
   { href: "/admin", label: "Overview" },
   { href: "/admin/payments", label: "Payments" },
   { href: "/admin/users", label: "Users" },
+  { href: "/admin/content", label: "Content" },
 ];
 
 export function AdminNav({ active }: { active: string }) {
@@ -24,6 +25,9 @@ export const STATUS_STYLES: Record<string, string> = {
   pending: "bg-info-soft text-info",
   failed: "bg-bad-soft text-bad",
   cancelled: "bg-sunken text-ink-soft",
+  published: "bg-good-soft text-good",
+  draft: "bg-info-soft text-info",
+  archived: "bg-sunken text-ink-soft",
 };
 
 export function StatusPill({ status }: { status: string }) {

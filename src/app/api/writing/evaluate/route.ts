@@ -9,7 +9,7 @@ import { AI_PROVIDER } from "@/server/ai/client";
 import { toAiApiError } from "@/server/ai/errors";
 import { createAttempt } from "@/server/services/attempts";
 import { getEvaluationModel } from "@/server/env";
-import { getWritingTask } from "@/content/writing";
+import { findWriting } from "@/server/content/catalog";
 import { countWords } from "@/lib/text";
 
 export const maxDuration = 60;
@@ -32,7 +32,7 @@ export const POST = handler("writing.evaluate", async (req) => {
   await enforceRateLimit([{ key: `writing:user:${user.id}`, limit: 20, windowSeconds: 60 * 60 }]);
 
   const body = await readJson(req, bodySchema);
-  const task = getWritingTask(body.taskId);
+  const task = await findWriting(body.taskId);
   if (!task) throw new ApiError(404, "TASK_NOT_FOUND", "That writing task does not exist.");
 
   const answer = body.answer.trim();

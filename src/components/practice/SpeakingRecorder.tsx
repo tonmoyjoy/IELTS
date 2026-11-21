@@ -3,25 +3,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { readSse } from "@/lib/sse";
 import { formatDuration } from "@/lib/text";
-import { Alert, BandBadge, Button, ButtonLink, Card } from "@/components/ui";
-import { CriteriaTable, FeedbackLists } from "@/components/practice/CriteriaTable";
+import { microphoneHint, pickRecordingMimeType as pickMimeType, submitSpeaking, type SpeakingResultPayload as ResultPayload } from "@/lib/speaking-upload";
+import { Alert, Button, Card } from "@/components/ui";
+import { SpeakingFeedback } from "@/components/practice/SpeakingFeedback";
 
 const MIN_SECONDS = 30;
 const MAX_SECONDS = 5 * 60;
 const MAX_BYTES = 10 * 1024 * 1024;
 
-type Evaluation = {
-  bandScore: number;
-  criteria: { fluencyCoherence: number; lexicalResource: number; grammaticalRange: number; pronunciation: number };
-  transcript: string;
-  summary: string;
-  strengths: string[];
-  improvements: string[];
-};
-
-type ResultPayload = { evaluation: Evaluation; attempt: { id: string } };
 
 type Status =
   | { kind: "idle" }
@@ -32,19 +22,6 @@ type Status =
   | { kind: "done"; result: ResultPayload }
   | { kind: "error"; message: string };
 
-function pickMimeType(): string | undefined {
-  if (typeof MediaRecorder === "undefined" || typeof MediaRecorder.isTypeSupported !== "function") return undefined;
-  return ["audio/webm;codecs=opus", "audio/webm", "audio/ogg;codecs=opus", "audio/mp4"].find((type) =>
-    MediaRecorder.isTypeSupported(type)
-  );
-}
-
-function microphoneHint(): string {
-  if (!window.isSecureContext) {
-    return "Microphone access needs a secure page (https:// or http://localhost).";
-  }
-  return "Allow microphone access in your browser's site settings, then try again.";
-}
 
 /** Reads a local file's duration; returns null when the browser cannot tell (common for WebM). */
 function readFileDuration(file: File): Promise<number | null> {
@@ -156,49 +133,13 @@ export function SpeakingRecorder({ setId, remainingEvaluations }: { setId: strin
   async function submit() {
     if (!blob) return;
     setStatus({ kind: "uploading" });
-    const form = new FormData();
-    const type = blob.type || "audio/webm";
-    const ext = type.includes("ogg") ? "ogg" : type.includes("mp4") ? "m4a" : type.includes("mpeg") ? "mp3" : type.includes("wav") ? "wav" : "webm";
-    form.append("audio", blob, blob instanceof File ? blob.name : `answer.${ext}`);
-    form.append("setId", setId);
-
-    let res: Response;
-    try {
-      res = await fetch("/api/speaking/evaluate", {
-        method: "POST",
-        body: form,
-        headers: { Accept: "text/event-stream" },
-        credentials: "same-origin",
-      });
-    } catch {
-      setStatus({ kind: "error", message: "Network error. Check your connection and try again." });
-      return;
+    const outcome = await submitSpeaking(blob, { setId, onScoring: () => setStatus({ kind: "scoring" }) });
+    if (outcome.ok) {
+      setStatus({ kind: "done", result: outcome.result });
+      router.refresh();
+    } else {
+      setStatus({ kind: "error", message: outcome.error });
     }
-
-    if (!res.ok || !(res.headers.get("content-type") ?? "").includes("text/event-stream")) {
-      const body = (await res.json().catch(() => null)) as { error?: string } | null;
-      setStatus({ kind: "error", message: body?.error ?? "Scoring could not start. Please try again." });
-      return;
-    }
-
-    setStatus({ kind: "scoring" });
-    let finished = false;
-    try {
-      await readSse(res, (event) => {
-        if (event.event === "result") {
-          finished = true;
-          setStatus({ kind: "done", result: event.data as ResultPayload });
-          router.refresh();
-        } else if (event.event === "error") {
-          finished = true;
-          const data = event.data as { error?: string };
-          setStatus({ kind: "error", message: data.error ?? "Scoring failed. Please try again." });
-        }
-      });
-    } catch {
-      // handled below
-    }
-    if (!finished) setStatus({ kind: "error", message: "The connection closed before scoring finished. Please try again." });
   }
 
   const busy = status.kind === "uploading" || status.kind === "scoring";
@@ -261,32 +202,7 @@ export function SpeakingRecorder({ setId, remainingEvaluations }: { setId: strin
         </p>
       </Card>
 
-      {status.kind === "done" && (
-        <Card className="space-y-5 p-6">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold">Examiner feedback</h2>
-            <BandBadge score={status.result.evaluation.bandScore} size="lg" />
-          </div>
-          <p className="text-sm leading-6 text-ink-soft">{status.result.evaluation.summary}</p>
-          <CriteriaTable
-            rows={[
-              { label: "Fluency and Coherence", score: status.result.evaluation.criteria.fluencyCoherence },
-              { label: "Lexical Resource", score: status.result.evaluation.criteria.lexicalResource },
-              { label: "Grammatical Range and Accuracy", score: status.result.evaluation.criteria.grammaticalRange },
-              { label: "Pronunciation", score: status.result.evaluation.criteria.pronunciation },
-            ]}
-          />
-          <FeedbackLists strengths={status.result.evaluation.strengths} improvements={status.result.evaluation.improvements} />
-          <details>
-            <summary className="cursor-pointer text-sm font-medium">Transcript</summary>
-            <p className="prose-reading mt-2 whitespace-pre-wrap">{status.result.evaluation.transcript}</p>
-          </details>
-          <div className="flex flex-wrap gap-2 border-t border-line pt-4">
-            <ButtonLink href={`/history/${status.result.attempt.id}`} variant="secondary">Open in history</ButtonLink>
-          </div>
-          <p className="text-xs text-ink-faint">AI feedback is a practice estimate, not an official IELTS score.</p>
-        </Card>
-      )}
+      {status.kind === "done" && <SpeakingFeedback result={status.result} />}
     </div>
   );
 }

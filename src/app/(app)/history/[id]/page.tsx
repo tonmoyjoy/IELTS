@@ -3,8 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requirePageUser } from "@/server/auth/session";
 import { getAttempt, listAttempts, type AttemptDetail } from "@/server/services/attempts";
-import { getReadingSet } from "@/content/reading";
-import { getListeningSet } from "@/content/listening";
+import { findListening, findReading } from "@/server/content/catalog";
 import { allQuestions } from "@/content/types";
 import { BandBadge, ButtonLink, Card, PageHeader } from "@/components/ui";
 import { CriteriaTable, FeedbackLists } from "@/components/practice/CriteriaTable";
@@ -24,9 +23,9 @@ function asNumberRecord(value: unknown): Record<string, number> {
   return Object.fromEntries(Object.entries(value).filter(([, v]) => typeof v === "number")) as Record<string, number>;
 }
 
-function ObjectiveResults({ attempt }: { attempt: AttemptDetail }) {
+async function ObjectiveResults({ attempt }: { attempt: AttemptDetail }) {
   const results = (Array.isArray(attempt.details.results) ? attempt.details.results : []) as Graded[];
-  const set = attempt.module === "reading" ? getReadingSet(attempt.contentId) : getListeningSet(attempt.contentId);
+  const set = attempt.module === "reading" ? await findReading(attempt.contentId) : await findListening(attempt.contentId);
   const prompts = new Map(set ? allQuestions(set.groups).map((q) => [q.id, q.prompt]) : []);
   const practiceHref = `/practice/${attempt.module}/${attempt.contentId}`;
 

@@ -1,61 +1,204 @@
 {
   "sports-centre": {
-    "voices": { "R": "female", "C": "male" },
+    "intro": "Part one. You will hear a telephone conversation between a receptionist at a sports centre and a man who wants to book a swimming course. First, you have some time to look at questions one to seven.",
+    "voices": {
+      "R": "female",
+      "C": "male"
+    },
     "lines": [
-      { "speaker": "R", "text": "Good morning, Greenfield Sports Centre. Sarah speaking. How can I help?" },
-      { "speaker": "C", "text": "Hello. I'd like to book a place on one of your swimming courses, please." },
-      { "speaker": "R", "text": "Of course. Is the course for you?" },
-      { "speaker": "C", "text": "Yes, it's for me. I can swim a little, but I've never had proper lessons, so I think I need the beginner course." },
-      { "speaker": "R", "text": "Right, the beginner course. The next one starts on Monday the twelfth of May." },
-      { "speaker": "C", "text": "Monday the twelfth. That's fine. What time are the lessons?" },
-      { "speaker": "R", "text": "The course runs for six weeks, every Monday evening from seven until eight o'clock. Your instructor will be Ms Carter." },
-      { "speaker": "C", "text": "Could you spell that, please?" },
-      { "speaker": "R", "text": "Certainly. C. A. R. T. E. R. Carter." },
-      { "speaker": "C", "text": "Thank you. And how much does the course cost?" },
-      { "speaker": "R", "text": "Members pay seventy-six pounds. For non-members the full price is eighty-five pounds." },
-      { "speaker": "C", "text": "I'm not a member, so eighty-five pounds then." },
-      { "speaker": "R", "text": "That's right. Can I take your name?" },
-      { "speaker": "C", "text": "Yes, it's David Henson. That's H. E. N. S. O. N." },
-      { "speaker": "R", "text": "Thank you, Mr Henson. And your address?" },
-      { "speaker": "C", "text": "Forty-two Mill Road. Mill, like a flour mill." },
-      { "speaker": "R", "text": "Lovely. Now, for every lesson you'll need to bring your own towel and a swimming cap. Goggles are optional, and we sell them at reception if you want a pair." },
-      { "speaker": "C", "text": "OK. Is there anywhere to park?" },
-      { "speaker": "R", "text": "Yes. There's a car park behind the building, not the one across the road, which belongs to the supermarket. Our car park is free for the first two hours." },
-      { "speaker": "C", "text": "Two hours is plenty. Thanks very much for your help." },
-      { "speaker": "R", "text": "You're welcome, Mr Henson. See you on the twelfth." }
+      {
+        "speaker": "R",
+        "text": "Good morning, Greenfield Sports Centre. Sarah speaking. How can I help?"
+      },
+      {
+        "speaker": "C",
+        "text": "Hello. I'd like to book a place on one of your swimming courses, please."
+      },
+      {
+        "speaker": "R",
+        "text": "Of course. Is the course for you?"
+      },
+      {
+        "speaker": "C",
+        "text": "Yes, it's for me. I can swim a little, but I've never had proper lessons, so I think I need the beginner course."
+      },
+      {
+        "speaker": "R",
+        "text": "Right, the beginner course. The next one starts on Monday the twelfth of May."
+      },
+      {
+        "speaker": "C",
+        "text": "Monday the twelfth. That's fine. What time are the lessons?"
+      },
+      {
+        "speaker": "R",
+        "text": "The course runs for six weeks, every Monday evening from seven until eight o'clock. Your instructor will be Ms Carter."
+      },
+      {
+        "speaker": "C",
+        "text": "Could you spell that, please?"
+      },
+      {
+        "speaker": "R",
+        "text": "Certainly. C. A. R. T. E. R. Carter."
+      },
+      {
+        "speaker": "C",
+        "text": "Thank you. And how much does the course cost?"
+      },
+      {
+        "speaker": "R",
+        "text": "Members pay seventy-six pounds. For non-members the full price is eighty-five pounds."
+      },
+      {
+        "speaker": "C",
+        "text": "I'm not a member, so eighty-five pounds then."
+      },
+      {
+        "speaker": "R",
+        "text": "That's right. Can I take your name?"
+      },
+      {
+        "speaker": "C",
+        "text": "Yes, it's David Henson. That's H. E. N. S. O. N."
+      },
+      {
+        "speaker": "R",
+        "text": "Thank you, Mr Henson. And your address?"
+      },
+      {
+        "speaker": "C",
+        "text": "Forty-two Mill Road. Mill, like a flour mill."
+      },
+      {
+        "speaker": "R",
+        "text": "Lovely. Now, for every lesson you'll need to bring your own towel and a swimming cap. Goggles are optional, and we sell them at reception if you want a pair."
+      },
+      {
+        "speaker": "C",
+        "text": "OK. Is there anywhere to park?"
+      },
+      {
+        "speaker": "R",
+        "text": "Yes. There's a car park behind the building, not the one across the road, which belongs to the supermarket. Our car park is free for the first two hours."
+      },
+      {
+        "speaker": "C",
+        "text": "Two hours is plenty. Thanks very much for your help."
+      },
+      {
+        "speaker": "R",
+        "text": "You're welcome, Mr Henson. See you on the twelfth."
+      }
     ]
   },
   "library-tour": {
-    "voices": { "G": "male" },
+    "intro": "Part two. You will hear a guide talking to a group of new students about the university library. First, you have some time to look at questions one to seven.",
+    "voices": {
+      "G": "male"
+    },
     "lines": [
-      { "speaker": "G", "text": "Good afternoon, everyone, and welcome to the Hartley Library tour. My name is James, and over the next few minutes I'll explain how the library is organised and how you can make the most of it during your first term." },
-      { "speaker": "G", "text": "Let's start here on the ground floor. The information desk is just to your left, next to the cafe. If you have any questions about borrowing, fines or finding a book, this is the place to come. On weekdays the desk is open from eight in the morning until ten at night. At weekends it closes earlier, at six." },
-      { "speaker": "G", "text": "Also on this floor you'll find the self-service machines, where you can borrow and return books using your student card. Undergraduate students can borrow up to twelve books at a time. Postgraduates can take twenty. The standard loan period is three weeks, and if nobody else has requested a book, you can renew it online." },
-      { "speaker": "G", "text": "Now, many of you will want somewhere quiet to work. The first floor is a silent study area, so phones must be switched off there. If you prefer to work in a group, you can book one of our study rooms on the second floor. Rooms are booked online for two-hour periods, and each room holds up to six people." },
-      { "speaker": "G", "text": "The history and politics collections are on level three, along with our rare books room. Rare books can't be taken out of the library, and there's no charge to see them, but you'll need to make an appointment at least two days in advance." },
-      { "speaker": "G", "text": "Finally, laptops are available to borrow from the technology desk, which is in the basement, not on the ground floor as many students expect. You can take a laptop for up to four hours, but you must return it to the same desk." },
-      { "speaker": "G", "text": "That's the end of the tour. If you have any questions, I'll be at the information desk for the next half an hour." }
+      {
+        "speaker": "G",
+        "text": "Good afternoon, everyone, and welcome to the Hartley Library tour. My name is James, and over the next few minutes I'll explain how the library is organised and how you can make the most of it during your first term."
+      },
+      {
+        "speaker": "G",
+        "text": "Let's start here on the ground floor. The information desk is just to your left, next to the cafe. If you have any questions about borrowing, fines or finding a book, this is the place to come. On weekdays the desk is open from eight in the morning until ten at night. At weekends it closes earlier, at six."
+      },
+      {
+        "speaker": "G",
+        "text": "Also on this floor you'll find the self-service machines, where you can borrow and return books using your student card. Undergraduate students can borrow up to twelve books at a time. Postgraduates can take twenty. The standard loan period is three weeks, and if nobody else has requested a book, you can renew it online."
+      },
+      {
+        "speaker": "G",
+        "text": "Now, many of you will want somewhere quiet to work. The first floor is a silent study area, so phones must be switched off there. If you prefer to work in a group, you can book one of our study rooms on the second floor. Rooms are booked online for two-hour periods, and each room holds up to six people."
+      },
+      {
+        "speaker": "G",
+        "text": "The history and politics collections are on level three, along with our rare books room. Rare books can't be taken out of the library, and there's no charge to see them, but you'll need to make an appointment at least two days in advance."
+      },
+      {
+        "speaker": "G",
+        "text": "Finally, laptops are available to borrow from the technology desk, which is in the basement, not on the ground floor as many students expect. You can take a laptop for up to four hours, but you must return it to the same desk."
+      },
+      {
+        "speaker": "G",
+        "text": "That's the end of the tour. If you have any questions, I'll be at the information desk for the next half an hour."
+      }
     ]
   },
   "community-garden": {
-    "voices": { "L": "female", "M": "male" },
+    "intro": "Part one. You will hear a telephone conversation between a woman who organises volunteers at a community garden and a man who would like to help. First, you have some time to look at questions one to eight.",
+    "voices": {
+      "L": "female",
+      "M": "male"
+    },
     "lines": [
-      { "speaker": "M", "text": "Hi, is this the Riverside Community Garden? I saw your notice in the library and I'm interested in volunteering." },
-      { "speaker": "L", "text": "Yes, it is. Thanks for calling. I'm Linda, the volunteer coordinator." },
-      { "speaker": "M", "text": "Great. When do the volunteers usually meet?" },
-      { "speaker": "L", "text": "We have a monthly meeting on Thursday evening. It starts at six thirty and it's held in Room B, B as in boy, at the community centre. Not Room D. That's the yoga class." },
-      { "speaker": "M", "text": "Thursday at six thirty, Room B. And is that when you do the gardening?" },
-      { "speaker": "L", "text": "No, the meeting is just for planning. Most of the practical work happens on Saturday mornings." },
-      { "speaker": "M", "text": "What sort of jobs are you doing this month?" },
-      { "speaker": "L", "text": "We're planting herbs near the south fence. We had hoped to plant fruit trees there, but the soil isn't deep enough. We also need to repair the wooden benches beside the entrance." },
-      { "speaker": "M", "text": "Do I need any experience, or any special equipment?" },
-      { "speaker": "L", "text": "No experience at all. We provide the tools, but please bring your own gloves and a water bottle." },
-      { "speaker": "M", "text": "Is there a cost to join?" },
-      { "speaker": "L", "text": "Membership itself is free, but we ask each volunteer to pay five pounds a year towards our insurance." },
-      { "speaker": "M", "text": "That's fine. And what happens to the vegetables you grow?" },
-      { "speaker": "L", "text": "A few are shared among the volunteers, but most of them go to the local food bank. We also run a small stall at the Sunday market, and the money from that is spent on seeds for next season." },
-      { "speaker": "M", "text": "That sounds wonderful. I'll come along on Thursday." },
-      { "speaker": "L", "text": "Lovely. See you then." }
+      {
+        "speaker": "M",
+        "text": "Hi, is this the Riverside Community Garden? I saw your notice in the library and I'm interested in volunteering."
+      },
+      {
+        "speaker": "L",
+        "text": "Yes, it is. Thanks for calling. I'm Linda, the volunteer coordinator."
+      },
+      {
+        "speaker": "M",
+        "text": "Great. When do the volunteers usually meet?"
+      },
+      {
+        "speaker": "L",
+        "text": "We have a monthly meeting on Thursday evening. It starts at six thirty and it's held in Room B, B as in boy, at the community centre. Not Room D. That's the yoga class."
+      },
+      {
+        "speaker": "M",
+        "text": "Thursday at six thirty, Room B. And is that when you do the gardening?"
+      },
+      {
+        "speaker": "L",
+        "text": "No, the meeting is just for planning. Most of the practical work happens on Saturday mornings."
+      },
+      {
+        "speaker": "M",
+        "text": "What sort of jobs are you doing this month?"
+      },
+      {
+        "speaker": "L",
+        "text": "We're planting herbs near the south fence. We had hoped to plant fruit trees there, but the soil isn't deep enough. We also need to repair the wooden benches beside the entrance."
+      },
+      {
+        "speaker": "M",
+        "text": "Do I need any experience, or any special equipment?"
+      },
+      {
+        "speaker": "L",
+        "text": "No experience at all. We provide the tools, but please bring your own gloves and a water bottle."
+      },
+      {
+        "speaker": "M",
+        "text": "Is there a cost to join?"
+      },
+      {
+        "speaker": "L",
+        "text": "Membership itself is free, but we ask each volunteer to pay five pounds a year towards our insurance."
+      },
+      {
+        "speaker": "M",
+        "text": "That's fine. And what happens to the vegetables you grow?"
+      },
+      {
+        "speaker": "L",
+        "text": "A few are shared among the volunteers, but most of them go to the local food bank. We also run a small stall at the Sunday market, and the money from that is spent on seeds for next season."
+      },
+      {
+        "speaker": "M",
+        "text": "That sounds wonderful. I'll come along on Thursday."
+      },
+      {
+        "speaker": "L",
+        "text": "Lovely. See you then."
+      }
     ]
   }
 }

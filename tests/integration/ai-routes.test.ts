@@ -117,6 +117,29 @@ describe("POST /api/speaking/evaluate", () => {
     expect(stored?.contentId).toBe("skills-and-learning");
   });
 
+  it("scores a whole test with the talking examiner as one evaluation", async () => {
+    await signInAs("fulltest@example.com");
+    generateContent.mockResolvedValueOnce({ text: speakingReply });
+    const form = audioForm("streamed-35s.webm", "audio/webm;codecs=opus");
+    form.append("mode", "full");
+    const res = await call(speaking.POST, { body: form, headers: { accept: "application/json" } });
+    expect(res.status).toBe(201);
+    const context = generateContent.mock.calls[0][0].contents[0].parts.find((p: { text?: string }) => p.text)?.text as string;
+    expect(context).toContain("complete Speaking test");
+    const stored = await PracticeAttempt.findOne({ module: "speaking" }).lean();
+    expect(stored?.title).toBe("Speaking test: Skills and learning");
+    expect((stored?.details as { mode: string }).mode).toBe("full");
+  });
+
+  it("needs a topic for a whole test", async () => {
+    await signInAs("notopic@example.com");
+    const form = audioForm("streamed-35s.webm", "audio/webm", "unknown-set");
+    form.append("mode", "full");
+    const res = await call(speaking.POST, { body: form });
+    expect(res.status).toBe(400);
+    expect(generateContent).not.toHaveBeenCalled();
+  });
+
   it("rejects recordings that are really too short, whatever the client claims", async () => {
     await signInAs("liar@example.com");
     const form = audioForm("short-3s.mp3", "audio/mpeg");

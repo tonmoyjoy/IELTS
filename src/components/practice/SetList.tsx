@@ -29,3 +29,18 @@ export function SetList({ items }: { items: SetListItem[] }) {
     </div>
   );
 }
+
+export function FullTestBanner({ href, title, meta, description }: { href: string; title: string; meta: string; description: string }) {
+  return (
+    <Link href={href} className="group block">
+      <Card className="flex flex-wrap items-center justify-between gap-4 border-accent bg-accent-soft p-5 transition-shadow group-hover:shadow-md">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wider text-accent-text">Computer-delivered format</p>
+          <h2 className="mt-1 font-semibold text-ink">{title}</h2>
+          <p className="mt-1 text-sm text-ink-soft">{description}</p>
+        </div>
+        <span className="text-sm font-medium text-accent-text">{meta} →</span>
+      </Card>
+    </Link>
+  );
+}

@@ -5,9 +5,7 @@ import { enforceRateLimit } from "@/server/security/rate-limit";
 import { requireApiUser } from "@/server/auth/session";
 import { createAttempt, listAttempts } from "@/server/services/attempts";
 import { gradeSet } from "@/server/practice/grading";
-import { getListeningScript } from "@/server/content/listening-scripts";
-import { getReadingSet } from "@/content/reading";
-import { getListeningSet } from "@/content/listening";
+import { answerKeysFor, findListening, findReading, scriptFor } from "@/server/content/catalog";
 import { isModule } from "@/lib/modules";
 
 const submitSchema = z.object({
@@ -48,12 +46,11 @@ export const POST = handler("practice.submit", async (req) => {
   await enforceRateLimit([{ key: `practice:user:${user.id}`, limit: 60, windowSeconds: 60 * 60 }]);
 
   const body = await readJson(req, submitSchema);
-  const set = body.module === "reading" ? getReadingSet(body.setId) : getListeningSet(body.setId);
+  const set = body.module === "reading" ? await findReading(body.setId) : await findListening(body.setId);
   if (!set) throw new ApiError(404, "SET_NOT_FOUND", "That practice set does not exist.");
 
-  const grade = gradeSet(body.module, set.groups, body.answers);
-  const transcript =
-    body.module === "listening" ? (getListeningScript(set.id)?.lines ?? []) : undefined;
+  const grade = gradeSet(body.module, set.groups, body.answers, await answerKeysFor(body.module, set.id));
+  const transcript = body.module === "listening" ? ((await scriptFor(set.id))?.lines ?? []) : undefined;
 
   const attempt = await createAttempt({
     userId: user.id,
