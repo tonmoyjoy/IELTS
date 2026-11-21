@@ -20,9 +20,17 @@
 # production
 /build
 
+# local environment and secrets
+.env
+.env.*
+!.env.example
+
 # misc
 .DS_Store
 *.pem
+*.key
+*.p12
+*.crt
 
 # debug
 npm-debug.log*
@@ -35,6 +43,12 @@ yarn-error.log*
 
 # vercel
 .vercel
+
+# local databases and uploads
+/.data/
+*.sqlite
+*.sqlite3
+*.db
 
 # typescript
 *.tsbuildinfo
